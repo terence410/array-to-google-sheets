@@ -2,7 +2,7 @@
   "author": "Terence <terence@madhead.com>",
   "name": "array-to-google-sheets",
   "description": "Update a 2 dimensional Array to Google Sheets (Spreadsheets).",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "license": "Unlicense",
   "homepage": "https://github.com/terence410/array-to-google-sheets",
   "repository": {
