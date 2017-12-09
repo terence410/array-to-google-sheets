@@ -3,6 +3,12 @@
   "name": "array-to-google-sheets",
   "description": "Update a 2 dimensional Array to Google Sheets (Spreadsheets).",
   "version": "0.1.0",
+  "license": "Unlicense",
+  "homepage": "https://github.com/terence410/array-to-google-sheets",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/terence410/array-to-google-sheets.git"
+  },
   "keywords": [
     "array",
     "google spreadsheet",
