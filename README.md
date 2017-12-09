@@ -1,6 +1,6 @@
 # Array To Google Sheets #
 
-A simple Node.js module for updating a 2 dimensional array into Google Spreadsheet.
+A simple Node.js module for updating a 2 dimensional array into Google Sheets (Spreadsheets).
 This module is built on top of another package [google-spreadsheet](https://www.npmjs.com/package/google-spreadsheet). 
 
 # Features
@@ -26,6 +26,8 @@ async function start()
         ['a', 'b', 'c'],
         [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
     ];
+    let docKey = '{Google Sheets Key}';
+    let creds = require('./creds.json');
     let a2gs = new ArrayToGoogleSheets(docKey, creds);
     await a2gs.updateGoogleSheets(sheetName, values, 
         {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
@@ -46,7 +48,13 @@ __Options__
 
 # Creds
 
-- For more details, please refer to https://www.npmjs.com/package/google-spreadsheet
+1. Go to the Google [Developers Console](https://console.developers.google.com/cloud-resource-manager)
+2. Select or Create Project
+3. Dashboard > Enable APIs and Services > Enable the Drive API for your project
+4. Credentials > Create Service Account Key
+5. Select Json Key type and save the downloaded json file to your project
+6. Once you have created the services account, you will have an email xxx@xxx.iam.gserviceaccount.com. **Go to your Goggle Sheets file and shared the edit permission to the email address.**
+2. For more details, please refer to https://www.npmjs.com/package/google-spreadsheet
 
 # Formula 
 
@@ -55,9 +63,10 @@ let values = [
     [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
     [{formula: '=%1/50', cells: [{row: 1, col: 3}]}], // =C1/50
     [{formula: '=sum(%1:%2)', cells: [{row: 'this', col: 1}, {row: 'this', col: 3}]}], // =sum(A3:C3)
+    [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 'this'}, {row: 3, col: 'this'}]}], // =sum(A1:A3);
     [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 0}, {row: 1, col: 0}]}], // =sum(1:1);
     [{formula: '=sum(%1:%2)', cells: [{row: 1}, {row: 1}]}], // =sum(1:1);
-    [{formula: '=sum(%1:%2)', cells: [{row: 0, col: 2}, {row: 0, col: 2}]}], // =sum(B:B);
+    [{formula: '=sum(%1:%2)', cells: [{row: 0, col: 2}, {row: 0, col: 2}]}] // =sum(B:B);
 ];
 ```
 

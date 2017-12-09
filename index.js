@@ -22,7 +22,7 @@ class ArrayToGoogleSheets
      */
     colToAlphabet(num)
     {
-        let char = (10 + (num - 1) % 26).toString(36).toUpperCase()
+        let char = (10 + (num - 1) % 26).toString(36).toUpperCase();
         return num > 0 ? this.colToAlphabet(parseInt((num - 1) / 26)) + char: '';
     }
 
@@ -36,9 +36,11 @@ class ArrayToGoogleSheets
      */
     formatFormula(formulaFormat, cells, currentRow, currentCol)
     {
+        if(!Array.isArray(cells)) return formulaFormat;
+
         let arr = cells.map(function (cell){
             let col = cell.col === 'this' ? currentCol: cell.col;
-            let row = cell.row === 'this' ? currentCol: cell.row;
+            let row = cell.row === 'this' ? currentRow: cell.row;
             return (col > 0 ? this.colToAlphabet(col): '') + (row > 0 ? row: '');
         }.bind(this));
 
@@ -54,10 +56,10 @@ class ArrayToGoogleSheets
      * @param {Object} options
      * @return {Promise}
      */
-    updateGoogleSheetsData(sheet, values, options) {
+    updateGoogleSheetsData(sheet, values, options)
+    {
         let that = this;
         return new Promise((resolve, reject) => {
-            let that = this;
             let rowCount = Math.max(options.minRow, values.length) + options.margin;
             let colCount = Math.max(options.minCol, values.reduce((a, b) => Math.max(a, b.length))) + options.margin;
 
@@ -94,10 +96,10 @@ class ArrayToGoogleSheets
                     values.forEach((list, i) => {
                         list.forEach((value, j) => {
                             if(myCells[i] && myCells[i][j]) {
-                                if (Number.isInteger(value)) {
+                                if (!isNaN(parseFloat(value)) && isFinite(value)){
                                     myCells[i][j].numericValue = value;
                                 } else if (typeof value === 'object') {
-                                    let formula = that.formatFormula(value.formula, value.cells, i, j);
+                                    let formula = that.formatFormula(value.formula, value.cells, i + 1, j + 1);
                                     myCells[i][j].formula = formula;
                                 } else {
                                     myCells[i][j].value = value;
@@ -110,6 +112,7 @@ class ArrayToGoogleSheets
 
                     // update the cells
                     sheet.bulkUpdateCells(options.clear ? cells: updatedCells, (err) => {
+                        if(err) return reject(err);
                         resolve();
                     });
                 });
@@ -124,7 +127,8 @@ class ArrayToGoogleSheets
      * @param {Object} options
      * @return {Promise}
      */
-    updateGoogleSheets(sheetName, values, options) {
+    updateGoogleSheets(sheetName, values, options = {})
+    {
         options = Object.assign({
             minRow: 20,
             minCol: 10,
@@ -135,7 +139,7 @@ class ArrayToGoogleSheets
 
         return new Promise((resolve, reject) => {
             // the values array must be 2 dimensional
-            if(values.length > 0 && !Array.isArray(values[0])) return reject(new Error('values must be 2 dimensional array.'))
+            if(values.length > 0 && !Array.isArray(values[0])) return reject(new Error('values must be 2 dimensional array.'));
 
             // connect to the service account
             this.doc.useServiceAccountAuth(this.creds, function (err) {
@@ -147,7 +151,7 @@ class ArrayToGoogleSheets
 
                     // search for existing worksheet
                     let sheet = info.worksheets.filter(x => {
-                        return x.title === sheetName;
+                        return x.title.toLowerCase() === sheetName.toLowerCase();
                     }).shift();
 
                     if (!sheet) { // create worksheet if not exist

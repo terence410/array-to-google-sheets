@@ -1,8 +1,8 @@
 {
   "author": "Terence <terence@madhead.com>",
   "name": "array-to-google-sheets",
-  "description": "Update Array to Google Sheets.",
-  "version": "0.0.1",
+  "description": "Update a 2 dimensional Array to Google Sheets (Spreadsheets).",
+  "version": "0.1.0",
   "keywords": [
     "array",
     "google spreadsheet",
@@ -17,6 +17,10 @@
   },
   "scripts": {
     "test": "mocha ./test/*"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha":"^4.0.1"
   },
   "dependencies": {
     "google-spreadsheet": "^2.0.4"
