@@ -1,0 +1,24 @@
+{
+  "author": "Terence <terence@madhead.com>",
+  "name": "array-to-google-sheets",
+  "description": "Update Array to Google Sheets.",
+  "version": "0.0.1",
+  "keywords": [
+    "array",
+    "google spreadsheet",
+    "google sheets",
+    "spreadsheet",
+    "array to google sheets",
+    "array to google spreadsheet"
+  ],
+  "main": "index.js",
+  "engines": {
+    "node": ">=6.0"
+  },
+  "scripts": {
+    "test": "mocha ./test/*"
+  },
+  "dependencies": {
+    "google-spreadsheet": "^2.0.4"
+  }
+}
