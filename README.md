@@ -19,18 +19,24 @@ This module is built on top of another package [google-spreadsheet](https://www.
 # Basic Usage
 
 ```javascript
+let ArrayToGoogleSheets = require('array-to-google-sheets');
 async function start()
 {
     let values = [
-        [1, 2, 3],
+        [1, 2, 3.5555],
+        [4, 5, 6],
         ['a', 'b', 'c'],
         [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
     ];
     let docKey = '{Google Sheets Key}';
     let creds = require('./creds.json');
     let a2gs = new ArrayToGoogleSheets(docKey, creds);
-    await a2gs.updateGoogleSheets(sheetName, values, 
-        {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
+    try{
+        await a2gs.updateGoogleSheets(sheetName, values, 
+            {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
+    }catch(err){
+        
+    }
 }
 ```
 

@@ -12,14 +12,14 @@ describe('Update Google Sheets', () => {
     it('Array with Number/String', async () => {
         let sheetName = "Testing1";
         let values = [
-            [0],
-            [1, 2, 3, 4.5],
+            [1, 2, 3.5555],
+            [4, 5, 6],
             ['a', 'b', 'c'],
-            ['=sum(A2:D2)', {formula: '=SUM(A2:D2)'}]
+            [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
         ];
 
         try {
-            await a2gs.updateGoogleSheets(sheetName, values, {margin: 1, minRow: 0, minCol: 1});
+            await a2gs.updateGoogleSheets(sheetName, values, {margin: 2, resize: true, clear: true});
         }catch (err){
             console.log('caught error');
             console.log(err);

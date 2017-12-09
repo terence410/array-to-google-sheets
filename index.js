@@ -61,7 +61,7 @@ class ArrayToGoogleSheets
         let that = this;
         return new Promise((resolve, reject) => {
             let rowCount = Math.max(options.minRow, values.length) + options.margin;
-            let colCount = Math.max(options.minCol, values.reduce((a, b) => Math.max(a, b.length))) + options.margin;
+            let colCount = Math.max(options.minCol, values.reduce((a, b) => Math.max(a, b.length), 0 )) + options.margin;
 
             // apply options
             if(!options.resize){
