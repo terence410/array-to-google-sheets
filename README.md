@@ -13,6 +13,7 @@ This module is built on top of another package [google-spreadsheet](https://www.
   - {formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}
   - equivalent to =sum(A1:C1)
 - Support Promise
+- Return the url and gid of the sheet upon edit
                 
 # Installation
 
@@ -34,7 +35,7 @@ async function start()
     let creds = require('./creds.json');
     let a2gs = new ArrayToGoogleSheets(docKey, creds);
     try{
-        await a2gs.updateGoogleSheets(sheetName, values, 
+        let {url, gid} = await a2gs.updateGoogleSheets(sheetName, values, 
             {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
     }catch(err){
         

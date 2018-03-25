@@ -9,68 +9,77 @@ let creds = require('../creds.json');
 let a2gs = new ArrayToGoogleSheets(docKey, creds);
 
 describe('Update Google Sheets', () => {
-    it('Array with Number/String', async () => {
-        let sheetName = "Testing1";
-        let values = [
-            [1, 2, 3.5555],
-            [4, 5, 6],
-            ['a', 'b', 'c'],
-            [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
-        ];
+  it('Array with Number/String', async () => {
+    let sheetName = "Testing1";
+    let values = [
+      [1, 2, 3.5555],
+      [4, 5, 6],
+      ['a', 'b', 'c'],
+      [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
+    ];
 
-        try {
-            await a2gs.updateGoogleSheets(sheetName, values, {margin: 2, resize: true, clear: true});
-        }catch (err){
-            console.log('caught error');
-            console.log(err);
-        }
+    try {
+      let result = await a2gs.updateGoogleSheets(sheetName, values, {margin: 2, resize: true, clear: true});
+      assert.hasAllKeys(result, ['url', 'gid']);
+    } catch (err) {
+      console.log('caught error');
+      console.log(err);
+    }
 
-    }).timeout(30 * 1000); // we have to wait longer for large data set
+  }).timeout(30 * 1000); // we have to wait longer for large data set
 
-    it('Array With Formula', async () => {
-        // pls refer to the README how to set this value
-        let sheetName = "testing2";
-        let values = [
-            [1, 2, 3, {formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
-            [4, 5, 6, {formula: '=%1/50', cells: [{row: 1, col: 3}]}], // =C1/50
-            [7, 8, 9, {formula: '=sum(%1:%2)', cells: [{row: 'this', col: 1}, {row: 'this', col: 3}]}], // =sum(A3:C3)
-            [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 'this'}, {row: 3, col: 'this'}]}], // =sum(A1:A3);
-            [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 0}, {row: 1, col: 0}]}], // =sum(1:1);
-            [{formula: '=sum(%1:%2)', cells: [{row: 1}, {row: 1}]}], // =sum(1:1);
-            [{formula: '=sum(%1:%2)', cells: [{row: 0, col: 2}, {row: 0, col: 2}]}], // =sum(B:B);
-        ];
+  it('Array With Formula', async () => {
+    // pls refer to the README how to set this value
+    let sheetName = "testing2";
+    let values = [
+      [1, 2, 3, {formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
+      [4, 5, 6, {formula: '=%1/50', cells: [{row: 1, col: 3}]}], // =C1/50
+      [7, 8, 9, {formula: '=sum(%1:%2)', cells: [{row: 'this', col: 1}, {row: 'this', col: 3}]}], // =sum(A3:C3)
+      [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 'this'}, {row: 3, col: 'this'}]}], // =sum(A1:A3);
+      [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 0}, {row: 1, col: 0}]}], // =sum(1:1);
+      [{formula: '=sum(%1:%2)', cells: [{row: 1}, {row: 1}]}], // =sum(1:1);
+      [{formula: '=sum(%1:%2)', cells: [{row: 0, col: 2}, {row: 0, col: 2}]}], // =sum(B:B);
+    ];
 
-        try {
-            await a2gs.updateGoogleSheets(sheetName, values, {margin: 5, minRow: 10, minCol: 10, clear: false, resize: false});
-        }catch (err){
-            console.log('caught error');
-            console.log(err);
-        }
+    try {
+      let result = await a2gs.updateGoogleSheets(sheetName, values, {
+        margin: 5,
+        minRow: 10,
+        minCol: 10,
+        clear:  false,
+        resize: false
+      });
 
-    }).timeout(30 * 1000); // we have to wait longer for large data set
+      assert.hasAllKeys(result, ['url', 'gid']);
+    } catch (err) {
+      console.log('caught error');
+      console.log(err);
+    }
 
-    it('Test Errors', async () => {
-        try {
-            let a2gs = new ArrayToGoogleSheets("", {});
-            await a2gs.updateGoogleSheets("sheet1", []);
-        }catch (err){
-            assert.equal(err.message, 'Spreadsheet key not provided.');
-        }
+  }).timeout(30 * 1000); // we have to wait longer for large data set
 
-        try {
-            let a2gs = new ArrayToGoogleSheets(docKey, {});
-            await a2gs.updateGoogleSheets("sheet1", []);
-        }catch (err){
-            assert.equal(err.message, 'No key or keyFile set.');
-        }
+  it('Test Errors', async () => {
+    try {
+      let a2gs = new ArrayToGoogleSheets("", {});
+      await a2gs.updateGoogleSheets("sheet1", []);
+    } catch (err) {
+      assert.equal(err.message, 'Spreadsheet key not provided.');
+    }
 
-        try {
-            let a2gs = new ArrayToGoogleSheets(docKey, creds);
-            await a2gs.updateGoogleSheets("sheet1", [1, 2, 3]);
-        }catch (err){
-            assert.equal(err.message, 'values must be 2 dimensional array.');
-        }
+    try {
+      let a2gs = new ArrayToGoogleSheets(docKey, {});
+      await a2gs.updateGoogleSheets("sheet1", []);
+    } catch (err) {
+      assert.equal(err.message, 'No key or keyFile set.');
+    }
 
-    }).timeout(5000);
+    try {
+      let a2gs = new ArrayToGoogleSheets(docKey, creds);
+      await a2gs.updateGoogleSheets("sheet1", [1, 2, 3]);
+    } catch (err) {
+      assert.equal(err.message, 'values must be 2 dimensional array.');
+    }
+
+  }).timeout(5000);
 });
 
