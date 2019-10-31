@@ -1,6 +1,6 @@
 # Array To Google Sheets #
 
-A simple Node.js module for updating a 2 dimensional array into Google Sheets (Spreadsheets).
+A simple Node.js (Written in typescript) module for updating a 2 dimensional array into Google Sheets (Spreadsheets).
 This module is built on top of another package [google-spreadsheet](https://www.npmjs.com/package/google-spreadsheet). 
 
 [![NPM version](https://badge.fury.io/js/array-to-google-sheets.png)](http://badge.fury.io/js/array-to-google-sheets)
@@ -12,8 +12,8 @@ This module is built on top of another package [google-spreadsheet](https://www.
 - Support generating formula
   - {formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}
   - equivalent to =sum(A1:C1)
-- Support Promise
 - Return the url and gid of the sheet upon edit
+- Written in Typescript
                 
 # Installation
 
@@ -22,33 +22,31 @@ This module is built on top of another package [google-spreadsheet](https://www.
 # Basic Usage
 
 ```javascript
-let ArrayToGoogleSheets = require('array-to-google-sheets');
-async function start()
-{
-    let values = [
+const ArrayToGoogleSheets = require("array-to-google-sheets");
+import ArrayToGoogleSheets from "array-to-google-sheets"; // typescript
+
+async function main() {
+    const values = [
         [1, 2, 3.5555],
         [4, 5, 6],
-        ['a', 'b', 'c'],
-        [{formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
+        ["a", "b", "c"],
+        [{formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
     ];
-    let docKey = '{Google Sheets Key}';
-    let creds = require('./creds.json');
-    let a2gs = new ArrayToGoogleSheets(docKey, creds);
-    try{
-        let {url, gid} = await a2gs.updateGoogleSheets(sheetName, values, 
-            {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
-    }catch(err){
-        
-    }
+    const docKey = "Google Sheets Key";
+    const creds = "./google-creds.json"; // file or json object both ok
+    const a2gs = new ArrayToGoogleSheets(docKey, creds);
+    const sheetName = "Sheet Name";
+    const {url, gid} = await a2gs.updateGoogleSheets(sheetName, values, 
+        {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
 }
 ```
 
 __Options__
 - margin: Extra blank cells, for better styling ^_^
 - minRow: Min. Rows
-- minCol: Min Cols
+- minCol: Min. Cols
 - resize: Resize the worksheet according to the array size
-- clear: Clear all cell values
+- clear: Clear all cell values before updating the cells
 
 # docKey 
 
@@ -90,7 +88,3 @@ let values = [
 - https://developers.google.com/google-apps/spreadsheets/
 - https://www.npmjs.com/package/google-spreadsheet
 - https://www.npmjs.com/package/array-to-google-sheets
-
-# License
-
-array-to-google-sheets is free and unencumbered public domain software. For more information, see the accompanying UNLICENSE file.

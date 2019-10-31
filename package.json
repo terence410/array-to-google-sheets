@@ -1,13 +1,36 @@
 {
-  "author": "Terence <terence@madhead.com>",
+  "author": "Terence",
   "name": "array-to-google-sheets",
-  "description": "Update a 2 dimensional Array to Google Sheets (Spreadsheets).",
+  "description": "Update a 2 dimensional Array to Google Sheets (Spreadsheets). Written in Typescript.",
   "version": "1.0.1",
-  "license": "Unlicense",
   "homepage": "https://github.com/terence410/array-to-google-sheets",
   "repository": {
     "type": "git",
     "url": "git://github.com/terence410/array-to-google-sheets.git"
+  },
+  "main": "build/index.js",
+  "engines": {
+    "node": ">=6.0"
+  },
+  "scripts": {
+    "test": "",
+    "build": "tsc",
+    "test general": "mocha --exit --timeout 10000 -r ts-node/register tests/general.test.ts",
+    "npm minor": "npm version minor",
+    "npm patch": "npm version patch"
+  },
+  "dependencies": {
+    "google-spreadsheet": "^2.0.4"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "dotenv": "^8.2.0",
+    "@types/chai": "^4.2.3",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.7.11",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.3"
   },
   "keywords": [
     "array",
@@ -17,18 +40,5 @@
     "array to google sheets",
     "array to google spreadsheet"
   ],
-  "main": "index.js",
-  "engines": {
-    "node": ">=6.0"
-  },
-  "scripts": {
-    "test": "mocha ./test/*"
-  },
-  "devDependencies": {
-    "chai": "^4.1.2",
-    "mocha": "^4.0.1"
-  },
-  "dependencies": {
-    "google-spreadsheet": "^2.0.4"
-  }
+  "license": "MIT License"
 }
