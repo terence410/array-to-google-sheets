@@ -1,4 +1,6 @@
 import fs from "fs";
+import "./types";
+// tslint:disable-next-line
 import GoogleSpreadsheet, {DocInfo, SpreadsheetWorksheet} from "google-spreadsheet";
 
 export type IOption = {

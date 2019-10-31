@@ -1,5 +1,4 @@
 declare module "google-spreadsheet" {
-
     export default class GoogleSpreadsheet {
         constructor(dockey: string);
 
