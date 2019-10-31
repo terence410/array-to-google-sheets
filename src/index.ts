@@ -115,8 +115,7 @@ export class ArrayToGoogleSheets {
           if (!isNaN(parseFloat(value)) && isFinite(value)) {
             myCells[i][j].numericValue = value;
           } else if (typeof value === "object") {
-            const formula = this.formatFormula(value.formula, value.cells, i + 1, j + 1);
-            myCells[i][j].formula = formula;
+            myCells[i][j].formula = this.formatFormula(value.formula, value.cells, i + 1, j + 1);
           } else {
             myCells[i][j].value = value;
           }
