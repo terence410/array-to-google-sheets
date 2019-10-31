@@ -23,7 +23,7 @@ This module is built on top of another package [google-spreadsheet](https://www.
 
 ```javascript
 const ArrayToGoogleSheets = require("array-to-google-sheets");
-import ArrayToGoogleSheets from "array-to-google-sheets"; // typescript
+import {ArrayToGoogleSheets} from "array-to-google-sheets"; // typescript
 
 async function main() {
     const values = [
@@ -57,11 +57,11 @@ __Options__
 
 1. Go to the Google [Developers Console](https://console.developers.google.com/cloud-resource-manager)
 2. Select or Create Project
-3. Dashboard > Enable APIs and Services > Enable the Drive API for your project
-4. Credentials > Create Service Account Key
-5. Select Json Key type and save the downloaded json file to your project
-6. Once you have created the services account, you will have an email xxx@xxx.iam.gserviceaccount.com. **Go to your Google Sheets file and shared the edit permission to the email address.**
-2. For more details, please refer to https://www.npmjs.com/package/google-spreadsheet
+3. Dashboard > [APIs and Services](https://console.cloud.google.com/apis/dashboard) > + Enable APIS AND SERVICES (Title Bar) > Search Drive > Enable the Drive API for your project
+4. Dashboard > APIs & Services > Credentials > Create Service Account Key > You do not need to select any role 
+5. For Key type, select JSON > Save the downloaded json file to your project
+6. Once you have created the services account, you will found an email xxx@xxx.iam.gserviceaccount.com. 
+7. Go to your Google Sheets file and shared the edit permission to the email address.
 
 # Formula 
 
