@@ -7,12 +7,9 @@ jobs:
       if: branch = master
       before_deploy:
       - npm run build
-      - export TRAVIS_TAG=$GIT_TAG
       deploy:
         provider: npm
         tag_name: $TRAVIS_TAG
         email: "$NPM_EMAIL"
         api_key: "$NPM_TOKEN"
         skip_cleanup: true
-        on:
-          tags: true
