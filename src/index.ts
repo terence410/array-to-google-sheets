@@ -165,6 +165,51 @@ export class ArrayToGoogleSheets {
     return this.getUrlObject(sheet.id);
   }
 
+  public async getGoogleSheets(sheetNames: string[] = []) {
+    const docInfo = await this._getDocInfo();
+    if (sheetNames.length === 0) {
+      sheetNames = docInfo.worksheets.map(x => x.title);
+    }
+
+    const result: any = {};
+    for (const worksheet of docInfo.worksheets) {
+      if (sheetNames.includes(worksheet.title)) {
+        const cells = await this._getCells(worksheet, worksheet.rowCount);
+
+        let finalCells: any[] = [];
+        cells.forEach(cell => {
+          if (!finalCells[cell.row - 1]) {
+            finalCells[cell.row - 1] = [];
+          }
+          finalCells[cell.row - 1].push(cell.value);
+        });
+
+        // filter empty rows
+        finalCells = finalCells.filter(row => {
+          return row.filter((cell: any[]) => cell.length > 0).length > 0;
+        });
+
+        // escape strings
+        finalCells = finalCells.map(row => {
+          return row.map((cell: string) => {
+            if (cell.match(/[,"]/)) {
+                return `"${cell.replace(/"/g, "\\\"")}"`;
+            }
+            return cell;
+          });
+        });
+
+        // format it
+        const csv = finalCells.map(row => row.join(",")).join("\r\n");
+
+        // assign the values
+        result[worksheet.title] = csv;
+      }
+    }
+
+    return result;
+  }
+
   // endregion
 
   // region private methods

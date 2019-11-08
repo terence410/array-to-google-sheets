@@ -16,6 +16,7 @@ describe("general", () => {
             [1, 2, 3.5555],
             [4, 5, 6],
             ["a", "b", "c"],
+            ["comma,", "\"quote\"", ",mixed\","],
             [{formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
         ];
 
@@ -27,7 +28,12 @@ describe("general", () => {
             console.log(err);
             assert.isFalse(true);
         }
+    });
 
+    it("Get the worksheet", async () => {
+        const sheetNames = ["Testing1"];
+        const result = await a2gs.getGoogleSheets(sheetNames);
+        assert.hasAllKeys(result, sheetNames);
     });
 
     it("Array With Formula", async () => {
