@@ -20,23 +20,27 @@
     "npm patch": "npm version patch"
   },
   "dependencies": {
-    "google-spreadsheet": "^2.0.4"
+    "google-spreadsheet": "^2.0.8"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "mocha": "^4.0.1",
-    "dotenv": "^8.2.0",
     "@types/chai": "^4.2.3",
     "@types/mocha": "^5.2.7",
-    "@types/node": "^12.7.11",
-    "ts-node": "^8.4.1",
-    "typescript": "^3.6.3"
+    "@types/node": "^12.12.7",
+    "chai": "^4.1.2",
+    "dotenv": "^8.2.0",
+    "mocha": "^4.0.1",
+    "ts-node": "^8.5.0",
+    "typescript": "^3.7.2"
   },
   "keywords": [
     "array",
     "google spreadsheet",
     "google sheets",
     "spreadsheet",
+    "spreadsheets",
+    "excel",
+    "google cloud",
+    "google drive",
     "array to google sheets",
     "array to google spreadsheet"
   ],

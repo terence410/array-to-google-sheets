@@ -165,49 +165,83 @@ export class ArrayToGoogleSheets {
     return this.getUrlObject(sheet.id);
   }
 
-  public async getGoogleSheets(sheetNames: string[] = []) {
+  public async getGoogleSheet(sheetName: string): Promise<any[] | undefined> {
+    const data = await this.getGoogleSheets([sheetName]);
+    if (sheetName in data) {
+      return data[sheetName];
+    }
+  }
+
+  public async getGoogleSheetAsCsv(sheetName: string): Promise<string | undefined> {
+    const data = await this.getGoogleSheetsAsCsv([sheetName]);
+    if (sheetName in data) {
+      return data[sheetName];
+    }
+  }
+
+  public async getGoogleSheets(sheetNames: string[] = []): Promise<{[key: string]: any[]}> {
     const docInfo = await this._getDocInfo();
+
+    // get all sheet by default
     if (sheetNames.length === 0) {
       sheetNames = docInfo.worksheets.map(x => x.title);
     }
 
-    const result: any = {};
-    for (const worksheet of docInfo.worksheets) {
-      if (sheetNames.includes(worksheet.title)) {
-        const cells = await this._getCells(worksheet, worksheet.rowCount);
+    const existingWorkSheets = docInfo.worksheets
+        .filter(x => sheetNames.includes(x.title));
+    const existingSheetNames = existingWorkSheets.map(x => x.title);
 
-        let finalCells: any[] = [];
-        cells.forEach(cell => {
-          if (!finalCells[cell.row - 1]) {
-            finalCells[cell.row - 1] = [];
-          }
-          finalCells[cell.row - 1].push(cell.value);
-        });
+    const promises = existingWorkSheets.map(x => this._getCells(x, x.rowCount));
+    const cellsList = await Promise.all(promises);
 
-        // filter empty rows
-        finalCells = finalCells.filter(row => {
-          return row.filter((cell: any[]) => cell.length > 0).length > 0;
-        });
+    // prepare result
+    const result: {[key: string]: any[]} = {};
+    for (let i = 0; i < cellsList.length; i++) {
+      const cells = cellsList[i];
+      const sheetName  = sheetNames[i];
 
-        // escape strings
-        finalCells = finalCells.map(row => {
-          return row.map((cell: string) => {
-            if (cell.match(/[,"]/)) {
-                return `"${cell.replace(/"/g, "\\\"")}"`;
-            }
-            return cell;
-          });
-        });
+      // turn into array2D
+      let array2d: any[] = [];
+      cells.forEach(cell => {
+        if (!array2d[cell.row - 1]) {
+          array2d[cell.row - 1] = [];
+        }
+        array2d[cell.row - 1].push(cell.value);
+      });
 
-        // format it
-        const csv = finalCells.map(row => row.join(",")).join("\r\n");
+      // filter empty rows
+      array2d = array2d.filter(row => {
+        return row.filter((cell: any[]) => cell.length > 0).length > 0;
+      });
 
-        // assign the values
-        result[worksheet.title] = csv;
-      }
+      // format and assign
+      result[sheetName] = array2d;
     }
 
     return result;
+  }
+
+  public async getGoogleSheetsAsCsv(sheetNames: string[] = []): Promise<{[key: string]: string}> {
+    const array2dObject = await this.getGoogleSheets(sheetNames);
+
+    // escape strings
+    const csvObject: {[key: string]: string} = {};
+    for (const [key, array2d] of Object.entries(array2dObject)) {
+
+      const escapedArray2d = array2d.map(row => {
+        return row.map((cell: string) => {
+          if (cell.match(/[,"]/)) {
+            return `"${cell.replace(/"/g, "\\\"")}"`;
+          }
+          return cell;
+        });
+      });
+
+      // format into csv
+      csvObject[key] = escapedArray2d.map(row => row.join(",")).join("\r\n");
+    }
+
+    return csvObject;
   }
 
   // endregion

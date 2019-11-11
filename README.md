@@ -1,6 +1,7 @@
 # Array To Google Sheets #
 
 A simple Node.js (Written in typescript) module for updating a 2 dimensional array into Google Sheets (Spreadsheets).
+You can asl get back the Spreadsheets in array or csv format.
 This module is built on top of another package [google-spreadsheet](https://www.npmjs.com/package/google-spreadsheet). 
 
 [![NPM version](https://badge.fury.io/js/array-to-google-sheets.png)](http://badge.fury.io/js/array-to-google-sheets)
@@ -13,6 +14,7 @@ This module is built on top of another package [google-spreadsheet](https://www.
   - {formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}
   - equivalent to =sum(A1:C1)
 - Return the url and gid of the sheet upon edit
+- Get Spreadsheets data in array or csv format
 - Written in Typescript
                 
 # Installation
@@ -26,7 +28,7 @@ const ArrayToGoogleSheets = require("array-to-google-sheets");
 import {ArrayToGoogleSheets} from "array-to-google-sheets"; // typescript
 
 async function main() {
-    const values = [
+    const array2d = [
         [1, 2, 3.5555],
         [4, 5, 6],
         ["a", "b", "c"],
@@ -36,8 +38,14 @@ async function main() {
     const creds = "./google-creds.json"; // file or json object both ok
     const a2gs = new ArrayToGoogleSheets(docKey, creds);
     const sheetName = "Sheet Name";
-    const {url, gid} = await a2gs.updateGoogleSheets(sheetName, values, 
+    const {url, gid} = await a2gs.updateGoogleSheets(sheetName, array2d, 
         {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
+    
+    // get data 
+    const array2dObject = await a2gs.getGoogleSheets(["sheetname"]);
+    const array2d = await a2gs.getGoogleSheet("sheetname");
+    const csvObject = await a2gs.getGoogleSheetsAsCsv(["sheetname"]);
+    const csv = await a2gs.getGoogleSheetAsCsv("sheetname");
 }
 ```
 
