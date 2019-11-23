@@ -1,0 +1,11 @@
+1,2,3.5555,,,,,,,,,
+4,5,6,,,,,,,,,
+a,b,c,,,,,,,,,
+"comma,","""quote""",",mixed"",","line1line2","line1
+line2","line1
+line2","line1line2
+line3
+line4""""
+
+line6",,,,,
+6.5555,,,,,,,,,,,

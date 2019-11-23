@@ -230,8 +230,9 @@ export class ArrayToGoogleSheets {
 
       const escapedArray2d = array2d.map(row => {
         return row.map((cell: string) => {
-          if (cell.match(/[,"]/)) {
-            return `"${cell.replace(/"/g, "\\\"")}"`;
+          // we use double quote to wrap the strings if it has [,"\r\n]
+          if (cell.match(/[,"\r\n]/)) {
+            return `"${cell.replace(/"/g, "\"\"")}"`;
           }
           return cell;
         });
