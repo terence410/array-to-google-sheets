@@ -61,25 +61,39 @@ describe("general", () => {
 
     it("Get Google Spreadsheets", async () => {
         const sheetNames = ["Testing1", "Testing2"];
-        const array2dObject = await a2gs.getGoogleSheets(sheetNames);
+        const googleSheets = await a2gs.getGoogleSheets(sheetNames);
+        assert.isArray(googleSheets);
+        assert.equal(googleSheets.length, 2);
+
+        const googleSheet = await a2gs.getGoogleSheet("Testing1");
+        assert.isDefined(googleSheet);
+        if (googleSheet) {
+            const googleSheetObject = a2gs.getUrlObject(googleSheet.id);
+            assert.isDefined(googleSheetObject);
+        }
+    });
+
+    it("Get Google Spreadsheets Data", async () => {
+        const sheetNames = ["Testing1", "Testing2"];
+        const array2dObject = await a2gs.getGoogleSheetsData(sheetNames);
         assert.hasAllKeys(array2dObject, sheetNames);
         
-        const array2d = await a2gs.getGoogleSheet("Testing1");
+        const array2d = await a2gs.getGoogleSheetData("Testing1");
         assert.isTrue(Array.isArray(array2d));
         console.log(array2d);
 
-        const array2dUndefined = await a2gs.getGoogleSheet("Unknown");
+        const array2dUndefined = await a2gs.getGoogleSheetData("Unknown");
         assert.isUndefined(array2dUndefined);
     });
 
-    it("Get Google Spreadsheets as csv", async () => {
+    it("Get Google Spreadsheets Data as csv", async () => {
         const sheetNames = ["Testing1", "Testing2"];
-        const csvObject = await a2gs.getGoogleSheetsAsCsv(sheetNames);
+        const csvObject = await a2gs.getGoogleSheetsDataAsCsv(sheetNames);
         assert.hasAllKeys(csvObject, sheetNames);
         console.log(csvObject);
         fs.writeFileSync("./tests/test.csv", csvObject.Testing1);
 
-        const csv = await a2gs.getGoogleSheetAsCsv("Testing1");
+        const csv = await a2gs.getGoogleSheetDataAsCsv("Testing1");
         assert.isTrue(typeof csv === "string");
     });
 

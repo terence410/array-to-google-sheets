@@ -165,21 +165,32 @@ export class ArrayToGoogleSheets {
     return this.getUrlObject(sheet.id);
   }
 
-  public async getGoogleSheet(sheetName: string): Promise<any[] | undefined> {
-    const data = await this.getGoogleSheets([sheetName]);
+  public async getGoogleSheet(sheetName: string): Promise<SpreadsheetWorksheet | undefined> {
+    const docInfo = await this._getDocInfo();
+    return docInfo.worksheets.find(x => sheetName === x.title);
+  }
+
+  public async getGoogleSheets(sheetNames: string[]): Promise<any[]> {
+    const docInfo = await this._getDocInfo();
+    return docInfo.worksheets
+        .filter(x => sheetNames.includes(x.title));
+  }
+
+  public async getGoogleSheetData(sheetName: string): Promise<any[] | undefined> {
+    const data = await this.getGoogleSheetsData([sheetName]);
     if (sheetName in data) {
       return data[sheetName];
     }
   }
 
-  public async getGoogleSheetAsCsv(sheetName: string): Promise<string | undefined> {
-    const data = await this.getGoogleSheetsAsCsv([sheetName]);
+  public async getGoogleSheetDataAsCsv(sheetName: string): Promise<string | undefined> {
+    const data = await this.getGoogleSheetsDataAsCsv([sheetName]);
     if (sheetName in data) {
       return data[sheetName];
     }
   }
 
-  public async getGoogleSheets(sheetNames: string[] = []): Promise<{[key: string]: any[]}> {
+  public async getGoogleSheetsData(sheetNames: string[] = []): Promise<{[key: string]: any[]}> {
     const docInfo = await this._getDocInfo();
 
     // get all sheet by default
@@ -221,8 +232,8 @@ export class ArrayToGoogleSheets {
     return result;
   }
 
-  public async getGoogleSheetsAsCsv(sheetNames: string[] = []): Promise<{[key: string]: string}> {
-    const array2dObject = await this.getGoogleSheets(sheetNames);
+  public async getGoogleSheetsDataAsCsv(sheetNames: string[] = []): Promise<{[key: string]: string}> {
+    const array2dObject = await this.getGoogleSheetsData(sheetNames);
 
     // escape strings
     const csvObject: {[key: string]: string} = {};
