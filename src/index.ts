@@ -209,7 +209,7 @@ export class ArrayToGoogleSheets {
     const result: {[key: string]: any[]} = {};
     for (let i = 0; i < cellsList.length; i++) {
       const cells = cellsList[i];
-      const sheetName  = sheetNames[i];
+      const sheetName  = existingSheetNames[i];
 
       // turn into array2D
       let array2d: any[] = [];
