@@ -80,7 +80,6 @@ describe("general", () => {
         
         const array2d = await a2gs.getGoogleSheetData("Testing1");
         assert.isTrue(Array.isArray(array2d));
-        console.log(array2d);
 
         const array2dUndefined = await a2gs.getGoogleSheetData("Unknown");
         assert.isUndefined(array2dUndefined);
@@ -90,7 +89,6 @@ describe("general", () => {
         const sheetNames = ["Testing1", "Testing2"];
         const csvObject = await a2gs.getGoogleSheetsDataAsCsv(sheetNames);
         assert.hasAllKeys(csvObject, sheetNames);
-        console.log(csvObject);
         fs.writeFileSync("./tests/test.csv", csvObject.Testing1);
 
         const csv = await a2gs.getGoogleSheetDataAsCsv("Testing1");

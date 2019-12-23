@@ -193,11 +193,6 @@ export class ArrayToGoogleSheets {
   public async getGoogleSheetsData(sheetNames: string[] = []): Promise<{[key: string]: any[]}> {
     const docInfo = await this._getDocInfo();
 
-    // get all sheet by default
-    if (sheetNames.length === 0) {
-      sheetNames = docInfo.worksheets.map(x => x.title);
-    }
-
     const existingWorkSheets = docInfo.worksheets
         .filter(x => sheetNames.includes(x.title));
     const existingSheetNames = existingWorkSheets.map(x => x.title);
