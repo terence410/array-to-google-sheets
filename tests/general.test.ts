@@ -1,6 +1,5 @@
 import { assert, expect } from "chai";
 import {config} from "dotenv";
-import fs from "fs";
 config();
 import "mocha";
 import {ArrayToGoogleSheets} from "../src";
@@ -22,7 +21,7 @@ describe("general", () => {
         ];
 
         try {
-            const result = await a2gs.updateGoogleSheets(sheetName, array2d,
+            const result = await a2gs.updateWorkSheet(sheetName, array2d,
                 {margin: 2, resize: true, clear: true});
             assert.hasAllKeys(result, ["url", "gid"]);
         } catch (err) {
@@ -45,7 +44,7 @@ describe("general", () => {
         ];
 
         try {
-            const result = await a2gs.updateGoogleSheets(sheetName, array2d, {
+            const result = await a2gs.updateWorkSheet(sheetName, array2d, {
                 margin: 5,
                 minRow: 10,
                 minCol: 10,
@@ -59,62 +58,69 @@ describe("general", () => {
         }
     });
 
-    it("Get Google Spreadsheets", async () => {
-        const sheetNames = ["Testing1", "Testing2"];
-        const googleSheets = await a2gs.getGoogleSheets(sheetNames);
-        assert.isArray(googleSheets);
-        assert.equal(googleSheets.length, 2);
-
-        const googleSheet = await a2gs.getGoogleSheet("Testing1");
-        assert.isDefined(googleSheet);
-        if (googleSheet) {
-            const googleSheetObject = a2gs.getUrlObject(googleSheet.id);
-            assert.isDefined(googleSheetObject);
-        }
+    it("Get WorkSheets", async () => {
+        const docInfo = await a2gs.getDocInfo();
+        const sheetNames = docInfo.worksheets.map(x => x.title);
+        assert.isAtLeast(sheetNames.length, 1);
     });
 
-    it("Get Google Spreadsheets Data", async () => {
-        const sheetNames = ["Testing1", "Testing2"];
-        const array2dObject = await a2gs.getGoogleSheetsData(sheetNames);
-        assert.hasAllKeys(array2dObject, sheetNames);
-        
-        const array2d = await a2gs.getGoogleSheetData("Testing1");
-        assert.isTrue(Array.isArray(array2d));
+    it("Get WorkSheets As Array", async () => {
+        const sheetNames = ["Testing1", "Testing2", "Unknown"];
+        const array2dList = await a2gs.getWorkSheetDataAsArray(sheetNames);
+        assert.equal(array2dList.length, sheetNames.length);
 
-        const array2dUndefined = await a2gs.getGoogleSheetData("Unknown");
-        assert.isUndefined(array2dUndefined);
+        const array2d1 = await a2gs.getWorkSheetDataAsArray("Testing1");
+        assert.isTrue(Array.isArray(array2d1));
+        assert.deepEqual(array2dList[0], array2d1);
+
+        const array2d2 = await a2gs.getWorkSheetDataAsArray("Testing2");
+        assert.isTrue(Array.isArray(array2d2));
+        assert.deepEqual(array2dList[1], array2d2);
+
+        const array2d3 = await a2gs.getWorkSheetDataAsArray("Unknown");
+        assert.isUndefined(array2d3);
+        assert.isUndefined(array2dList[2]);
     });
 
-    it("Get Google Spreadsheets Data as csv", async () => {
-        const sheetNames = ["Testing1", "Testing2"];
-        const csvObject = await a2gs.getGoogleSheetsDataAsCsv(sheetNames);
-        assert.hasAllKeys(csvObject, sheetNames);
-        fs.writeFileSync("./tests/test.csv", csvObject.Testing1);
+    it("Get WorkSheets as csv", async () => {
+        const sheetNames = ["Testing1", "Testing2", "Unknown"];
+        const csvList = await a2gs.getWorkSheetDataAsCsv(sheetNames);
+        assert.equal(csvList.length, sheetNames.length);
+        // fs.writeFileSync("./tests/test1.csv", csvList[0]);
 
-        const csv = await a2gs.getGoogleSheetDataAsCsv("Testing1");
-        assert.isTrue(typeof csv === "string");
+        const csv1 = await a2gs.getWorkSheetDataAsCsv("Testing1");
+        assert.isTrue(typeof csv1 === "string");
+        assert.equal(csv1, csvList[0]);
+
+        const csv2 = await a2gs.getWorkSheetDataAsCsv("Testing2");
+        assert.isTrue(typeof csv2 === "string");
+        assert.equal(csv2, csvList[1]);
+
+        const csv3 = await a2gs.getWorkSheetDataAsCsv("Unknown");
+        assert.isUndefined(csv3);
+        assert.isUndefined(csvList[2]);
     });
 
     it("Test Errors", async () => {
         try {
             const a2gs1 = new ArrayToGoogleSheets("", {});
-            await a2gs1.updateGoogleSheets("sheet1", []);
+            await a2gs1.updateWorkSheet("sheet1", []);
         } catch (err) {
             assert.equal(err.message, "Spreadsheet key not provided.");
         }
 
         try {
             const a2gs2 = new ArrayToGoogleSheets(docKey, {});
-            await a2gs2.updateGoogleSheets("sheet1", []);
+            await a2gs2.updateWorkSheet("sheet1", []);
         } catch (err) {
             assert.equal(err.message, "No key or keyFile set.");
         }
 
         try {
             const a2gs3 = new ArrayToGoogleSheets(docKey, creds);
-            await a2gs3.updateGoogleSheets("sheet1", [1, 2, 3]);
+            await a2gs3.updateWorkSheet("sheet1", [1, 2, 3]);
         } catch (err) {
-            assert.equal(err.message, "Values must be 2 dimensional array.");
+            assert.equal(err.message, "Values must be a 2 dimensional array.");
         }
     });
 });

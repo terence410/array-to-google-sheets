@@ -14,10 +14,10 @@
   },
   "scripts": {
     "test": "",
-    "build": "tsc",
-    "test general": "mocha --exit --timeout 10000 -r ts-node/register tests/general.test.ts",
-    "npm minor": "npm version minor",
-    "npm patch": "npm version patch"
+    "test:all": "nyc --reporter=json --reporter=text mocha --exit --timeout 10000 -r ts-node/register tests/*.ts",
+    "npm:minor": "npm version minor",
+    "npm:patch": "npm version patch",
+    "build": "tsc"
   },
   "dependencies": {
     "google-spreadsheet": "^2.0.8"
@@ -30,7 +30,8 @@
     "dotenv": "^8.2.0",
     "mocha": "^4.0.1",
     "ts-node": "^8.5.0",
-    "typescript": "^3.7.2"
+    "typescript": "^3.7.2",
+    "nyc": "^15.0.0"
   },
   "keywords": [
     "array",
