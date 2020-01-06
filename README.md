@@ -6,9 +6,9 @@
 [![David deps][david-image]][david-url]
 
 [npm-image]: https://img.shields.io/npm/v/array-to-google-sheets.svg
-[npm-url]: https://npmjs.org/package/ts-datastoreorm
-[travis-image]: https://img.shields.io/travis/eggjs/egg.svg?style=flat-square
-[travis-url]: https://travis-ci.org/eggjs/egg
+[npm-url]: https://npmjs.org/package/array-to-google-sheets
+[travis-image]: https://img.shields.io/travis/terence410/array-to-google-sheets.svg?style=flat-square
+[travis-url]: https://travis-ci.org/terence410/array-to-google-sheets
 [codecov-image]: https://img.shields.io/codecov/c/github/terence410/array-to-google-sheets.svg?style=flat-square
 [codecov-url]: https://codecov.io/gh/terence410/array-to-google-sheets
 [david-image]: https://img.shields.io/david/terence410/array-to-google-sheets.svg?style=flat-square
@@ -49,6 +49,12 @@ async function main() {
         ["a", "b", "c"],
         [{formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
     ];
+    // Options:
+    // margin: Extra blank cells, for better styling ^_^
+    // minRow: Min. Rows
+    // minCol: Min. Cols
+    // resize: Resize the worksheet according to the array size
+    // clear: Clear all cell values before updating the cells
     const {url, gid} = await a2gs.updateWorkSheet(sheetName, array2d,
         {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
 
