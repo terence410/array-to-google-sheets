@@ -24,11 +24,18 @@ jobs:
         run: |
           npm install
           npm run build --if-present
-          npm run test:nyc
+          npm run test:coverage
         env:
           CLIENT_EMAIL: ${{secrets.CLIENT_EMAIL }}
           PRIVATE_KEY: ${{secrets.PRIVATE_KEY }}
           SPREADSHEET_ID: ${{secrets.SPREADSHEET_ID }}
+
+      - name: Upload code coverage
+        if: env.CODECOV_TOKEN != ''
+        run: |
+          npm install codecov@latest -g
+          mv coverage/coverage-final.json coverage/coverage.json
+          codecov
 
       - name: Publish to NPM
         run: |
@@ -41,10 +48,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
-      - name: Upload code coverage
-        if: env.CODECOV_TOKEN != ''
-        run: |
-          npm install codecov@latest -g
-          npm run test:coverage
-          mv coverage/coverage-final.json coverage/coverage.json
-          codecov
+

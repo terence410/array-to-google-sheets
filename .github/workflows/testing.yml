@@ -28,7 +28,7 @@ jobs:
       run: |
         npm install
         npm run build
-        npm run test:nyc
+        npm run test
       env:
         CLIENT_EMAIL: ${{secrets.CLIENT_EMAIL }}
         PRIVATE_KEY: ${{secrets.PRIVATE_KEY }}
