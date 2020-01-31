@@ -8,8 +8,7 @@ package-lock.json
 .env
 credential.json
 build
-tests/*.csv
-coverage.bat
+index.csv
 
 # User-specific stuff
 .idea/**/workspace.xml

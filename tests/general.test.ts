@@ -1,126 +1,150 @@
 import { assert, expect } from "chai";
 import {config} from "dotenv";
 config();
+import csvParse from "csv-parse";
 import "mocha";
-import {ArrayToGoogleSheets} from "../src";
+import {ArrayToGoogleSheets} from "../src/ArrayToGoogleSheets";
 
-const docKey = process.env.DOC_KEY || "";
-const creds = process.env.CRED_FILE || "";
+const spreadsheetId = process.env.SPREADSHEET_ID || "";
+const keyFilename = process.env.KEY_FILENAME || "";
+const clientEmail = process.env.CLIENT_EMAIL;
+const privateKey = process.env.PRIVATE_KEY;
+const credentials = clientEmail && privateKey ? {client_email: clientEmail, private_key: privateKey} : undefined;
 
-describe("general", () => {
-    const a2gs = new ArrayToGoogleSheets(docKey, creds);
-
-    it("Array with Number/String", async () => {
-        const sheetName = "Testing1";
-        const array2d = [
-            [1, 2, 3.5555],
-            [4, 5, 6],
-            ["a", "b", "c"],
-            ["comma,", "\"quote\"", ",mixed\",", "line1\rline2", "line1\r\nline2", "line1\nline2", "line1\rline2\r\nline3\nline4\"\"\n\nline6"],
-            [{formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
-        ];
-
-        try {
-            const result = await a2gs.updateWorkSheet(sheetName, array2d,
-                {margin: 2, resize: true, clear: true});
-            assert.hasAllKeys(result, ["url", "gid"]);
-        } catch (err) {
-            console.log(err);
-            assert.isFalse(true);
-        }
+describe.only("general", () => {
+    let memory = 0;
+    beforeEach(() => {
+        memory = process.memoryUsage().heapUsed;
     });
 
-    it("Array With Formula", async () => {
-        // pls refer to the README how to set this value
-        const sheetName = "Testing2";
-        const array2d = [
+    afterEach(() => {
+        const memoryDiff = process.memoryUsage().heapUsed - memory;
+        console.log(`Used memory: ${memoryDiff / 1024 / 1024 | 0}MB`);
+    });
+
+    it("basic operation", async () => {
+        const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+        const {spreadsheetUrl, properties} = spreadsheet;
+        const {title, locale, timeZone, defaultFormat} = properties;
+
+        const sheetName = "basic";
+        const sheet = await spreadsheet.findSheet(sheetName);
+        if (sheet) {
+            const result = await sheet.delete();
+        }
+
+        // get sheet again
+        const newSheet = await spreadsheet.findOrCreateSheet(sheetName);
+
+        //  update
+        const values1 = [
+            [1, 2, 3],
+            [1.1, 2.2, -3.33],
+            ["abc", "cde", "xyz"],
+        ];
+        const updateResult1 = await newSheet.update(values1, {minRow: 3, minColumn: 3, margin: 2, fitToSize: true});
+        const resultValues1 = await newSheet.getValues();
+        assert.deepEqual(values1, resultValues1);
+
+        // update in simple way
+        const values2 = [
+            [1, 2, 3],
+            [{formula: "=sum(%1:%2)", cells: [{row: 1}, {row: 1}]}],
+        ];
+        const updateResult2 = await spreadsheet.updateSheet(sheetName, values2, {clearAllValues: true});
+        const resultValues2 = await newSheet.getValues();
+        assert.deepEqual(resultValues2, [[1, 2, 3], [6]]);
+    });
+
+    it("formula", async () => {
+        const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+        const sheetName = "formula";
+        
+        const values = [
             [1, 2, 3, {formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
             [4, 5, 6, {formula: "=%1/50", cells: [{row: 1, col: 3}]}], // =C1/50
             [7, 8, 9, {formula: "=sum(%1:%2)", cells: [{row: "this", col: 1}, {row: "this", col: 3}]}], // =sum(A3:C3)
             [{formula: "=sum(%1:%2)", cells: [{row: 1, col: "this"}, {row: 3, col: "this"}]}], // =sum(A1:A3);
-            [{formula: "=sum(%1:%2)", cells: [{row: 1, col: 0}, {row: 1, col: 0}]}], // =sum(1:1);
             [{formula: "=sum(%1:%2)", cells: [{row: 1}, {row: 1}]}], // =sum(1:1);
-            [{formula: "=sum(%1:%2)", cells: [{row: 0, col: 2}, {row: 0, col: 2}]}], // =sum(B:B);
+            [{formula: "=sum(%1:%2)", cells: [{row: 2}, {row: 2}]}], // =sum(1:1);
+            [{formula: "=sum(%1:%2)", cells: [{col: 3}, {col: 3}]}], // =sum(B:B);
         ];
 
-        try {
-            const result = await a2gs.updateWorkSheet(sheetName, array2d, {
-                margin: 5,
-                minRow: 10,
-                minCol: 10,
-                clear:  false,
-                resize: false,
+        const sheet = await spreadsheet.findOrCreateSheet(sheetName);
+        await sheet.update(values);
+        const resultValues = await sheet.getValues();
+        assert.deepEqual(resultValues, [
+                [ 1, 2, 3, 6 ],
+                [ 4, 5, 6, 0.06 ],
+                [ 7, 8, 9, 24 ],
+                [ 12 ],
+                [ 12 ],
+                [ 15.06 ],
+                [ 18 ],
+            ],
+        );
+    });
+
+    it("csv", async () => {
+        const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+
+        const sheetName = "csv";
+        const sheet = await spreadsheet.findOrCreateSheet(sheetName);
+
+        const values1 = [
+            [1, 234, 567],
+            [1.1111, 2.2222, -3.3333],
+            [",,,,,,,,,", "----------", "``````````"],
+            ["\t\t\t", "     ", "~!@#$%^&*()-="],
+            ["comma,", "\"quote\"", ",mixed\",", "line1\rline2"],
+            ["line1\r\nline2", "line1\nline2", "line1\rline2\r\nline3\nline4\"\"\n\nline6"],
+        ];
+        await sheet.update(values1, {clearAllValues: true});
+
+        // export into csv
+        const csvString = await sheet.exportAsCsv("./index.csv");
+
+        const resultValues = await new Promise((resolve, reject) => {
+            csvParse(csvString, {delimiter: ",", relax_column_count: true, cast: true}, (err, csvJson) => {
+                if (err) {
+                    return resolve(err);
+                }
+
+                resolve(csvJson);
             });
-            assert.hasAllKeys(result, ["url", "gid"]);
-        } catch (err) {
-            console.log(err);
-            assert.isFalse(true);
+        });
+
+        assert.deepEqual(resultValues, values1);
+    });
+
+    // completed in 23s for 10000 * 100 records, Need around 20MB allocations
+    it.skip("massive operation", async () => {
+        function checkMemory() {
+            const {heapUsed, heapTotal} = process.memoryUsage();
+            console.log(`heap: ${heapUsed / 1024 / 1024 | 0}MB, healTotal: ${heapTotal / 1024 / 1024 | 0}MB`);
         }
-    });
+        setInterval(checkMemory, 1000);
+        checkMemory();
 
-    it("Get WorkSheets", async () => {
-        const docInfo = await a2gs.getDocInfo();
-        const sheetNames = docInfo.worksheets.map(x => x.title);
-        assert.isAtLeast(sheetNames.length, 1);
-    });
+        const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
 
-    it("Get WorkSheets As Array", async () => {
-        const sheetNames = ["Testing1", "Testing2", "Unknown"];
-        const array2dList = await a2gs.getWorkSheetDataAsArray(sheetNames);
-        assert.equal(array2dList.length, sheetNames.length);
+        const sheetName = "massive";
+        const totalRow = 10000;
+        const totalColumn = 100;
+        const values = Array(totalRow).fill(0).map((x, i) => Array(totalColumn).fill(i));
 
-        const array2d1 = await a2gs.getWorkSheetDataAsArray("Testing1");
-        assert.isTrue(Array.isArray(array2d1));
-        assert.deepEqual(array2dList[0], array2d1);
+        const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 
-        const array2d2 = await a2gs.getWorkSheetDataAsArray("Testing2");
-        assert.isTrue(Array.isArray(array2d2));
-        assert.deepEqual(array2dList[1], array2d2);
+        const updateResult = await sheet.update(values);
+        assert.equal(updateResult.updatedRows, totalRow);
+        assert.equal(updateResult.updatedColumns, totalColumn);
+        assert.equal(updateResult.updatedCells, totalRow * totalColumn);
 
-        const array2d3 = await a2gs.getWorkSheetDataAsArray("Unknown");
-        assert.isUndefined(array2d3);
-        assert.isUndefined(array2dList[2]);
-    });
-
-    it("Get WorkSheets as csv", async () => {
-        const sheetNames = ["Testing1", "Testing2", "Unknown"];
-        const csvList = await a2gs.getWorkSheetDataAsCsv(sheetNames);
-        assert.equal(csvList.length, sheetNames.length);
-        // fs.writeFileSync("./tests/test1.csv", csvList[0]);
-
-        const csv1 = await a2gs.getWorkSheetDataAsCsv("Testing1");
-        assert.isTrue(typeof csv1 === "string");
-        assert.equal(csv1, csvList[0]);
-
-        const csv2 = await a2gs.getWorkSheetDataAsCsv("Testing2");
-        assert.isTrue(typeof csv2 === "string");
-        assert.equal(csv2, csvList[1]);
-
-        const csv3 = await a2gs.getWorkSheetDataAsCsv("Unknown");
-        assert.isUndefined(csv3);
-        assert.isUndefined(csvList[2]);
-    });
-
-    it("Test Errors", async () => {
-        try {
-            const a2gs1 = new ArrayToGoogleSheets("", {});
-            await a2gs1.updateWorkSheet("sheet1", []);
-        } catch (err) {
-            assert.equal(err.message, "Spreadsheet key not provided.");
-        }
-
-        try {
-            const a2gs2 = new ArrayToGoogleSheets(docKey, {});
-            await a2gs2.updateWorkSheet("sheet1", []);
-        } catch (err) {
-            assert.equal(err.message, "No key or keyFile set.");
-        }
-
-        try {
-            const a2gs3 = new ArrayToGoogleSheets(docKey, creds);
-            await a2gs3.updateWorkSheet("sheet1", [1, 2, 3]);
-        } catch (err) {
-            assert.equal(err.message, "Values must be a 2 dimensional array.");
-        }
-    });
+        const resultValues = await sheet.getValues();
+        assert.deepEqual(resultValues, values);
+    }).timeout(60 * 1000);
 });

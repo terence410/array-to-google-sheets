@@ -14,72 +14,76 @@
 [david-image]: https://img.shields.io/david/terence410/array-to-google-sheets.svg?style=flat-square
 [david-url]: https://david-dm.org/terence410/array-to-google-sheets
 
-Update a 2 dimensional array into Google Sheets (Spreadsheets).
-You can also get back the Spreadsheets in array or csv format.
-This module is built on top of another package [google-spreadsheet](https://www.npmjs.com/package/google-spreadsheet). 
+Update a 2 dimensional array into Google Sheets (Spreadsheets). You can also get back data in array or csv.
+The library is build with [Google Sheets API v4](https://developers.google.com/sheets).
 
 # Features
 
-- Support Number/String/Formula
-- Auto resize the worksheet according to the array size
+- Tested with huge amount of data (10000 rows x 100 columns) and optimized memory usage.
 - Support generating formula
   - {formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}
   - equivalent to =sum(A1:C1)
-- Return the url and gid of the sheet upon edit
 - Get Spreadsheets data in array or csv format
-- Written in Typescript
 
-# Basic Usage
+# Usage
 
 ```typescript
-const ArrayToGoogleSheets = require("array-to-google-sheets");
-import {ArrayToGoogleSheets} from "array-to-google-sheets"; // typescript
+import {ArrayToGoogleSheets, IUpdateOptions} from "array-to-google-sheets"; // typescript
 
-async function main() {
-    // init the library
-    const docKey = "Google Sheets Key";
-    const keyFilename = "./google-creds.json"; // file or json object both ok
-    const sheetName = "Sheet Name";
-    const a2gs = new ArrayToGoogleSheets(docKey, keyFilename);
+async function simple() {
+    const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
+    const spreadsheet = await googleSheets.getSpreadsheet("19Ef3falKKiHAOo3Ps13tVC9M0BaG-NoYngAZggt8Jzk-NodnEAz5gt3iak");
+    await spreadsheet.updateSheet("sheetName", [[1, 2, 3]]);
+}
 
-    // save array
-    const array2d = [
-        [1, 2, 3.5555],
-        [4, 5, 6],
-        ["a", "b", "c"],
-        [{formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
+async function advance() {
+    // https://www.npmjs.com/package/google-auth-library
+
+    // service account json (either one)
+    const keyFilename = "serviceAccount.json";
+    // credentials for service account (either one)
+    const credentials = {client_email: "", private_key: ""};
+
+    const spreadsheetId = "";
+    const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
+    const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+    const {spreadsheetUrl, properties} = spreadsheet;
+    const {title, locale, timeZone, defaultFormat} = properties;
+
+    // find and delete
+    const sheetName = "sheetName";
+    const sheet = await spreadsheet.findSheet(sheetName);
+    if (sheet) {
+        const result = await sheet.delete();
+    }
+
+    // get sheet again
+    const newSheet = await spreadsheet.findOrCreateSheet(sheetName);
+    const url = newSheet.getUrl();
+
+    //  update
+    const values1 = [
+        [1, 2, 3],
+        [1.1, 2.2, -3.33],
+        ["abc", "cde", "xyz"],
     ];
-    // Options:
-    // margin: Extra blank cells, for better styling ^_^
-    // minRow: Min. Rows
-    // minCol: Min. Cols
-    // resize: Resize the worksheet according to the array size
-    // clear: Clear all cell values before updating the cells
-    const {url, gid} = await a2gs.updateWorkSheet(sheetName, array2d,
-        {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
+    const updateOptions: IUpdateOptions = {
+        minRow: 3, // styling
+        minColumn: 3, // styling
+        margin: 2,  // styling
+        fitToSize: true,  // remove empty cells
+        clearAllValues: true, // clear all existing values
+    };
+    const updateResult1 = await newSheet.update(values1, updateOptions);
+    const resultValues1 = await newSheet.getValues();
 
-    // get doc info object (from google-spreadsheet)
-    const docInfo = await a2gs.getDocInfo();
-    const {id, title, updated, worksheets, author} = docInfo;
-
-    // get all sheet names
-    const sheetNames = docInfo.worksheets.map(x => x.title);
-
-    // get workSheet
-    const workSheet = docInfo.worksheets[0];
-
-    // query data from spreadsheet
-    const array = await a2gs.getWorkSheetDataAsArray("sheetName");
-    const csv = await a2gs.getWorkSheetDataAsCsv("sheetName");
-
-    // you can also pass an array as parameters, it will return array
-    const arrayList = await a2gs.getWorkSheetDataAsArray(["sheetName"]);
-    const csvList = await a2gs.getWorkSheetDataAsCsv(["sheetName"]);
+    // export into csv
+    await newSheet.exportAsCsv("data.csv");
 }
 
 ```
 
-# docKey 
+# spreadsheetId 
 
 Every Google Sheets has a unique key in the URL
 https://docs.google.com/spreadsheets/d/{docKey}/
@@ -91,10 +95,11 @@ https://docs.google.com/spreadsheets/d/{docKey}/
   - Service account details > Choose any service account name > CREATE
   - Grant this service account access to project > CONTINUE
   - Grant users access to this service account ( > CREATE KEY
-- In the JSON key file, you will find an email xxx@xxx.iam.gserviceaccount.com. 
-- Go to your Google Sheets file and shared the edit permission to the email address.
-- If things doesnt work, try to enable the Drive API first.
+  - Save the key file into your project
+- Enable Drive API
   -  [APIs and Services](https://console.cloud.google.com/apis/dashboard) > + Enable APIS AND SERVICES > Search Google Drive API > Enable
+- Open the JSON key file, you will find an email xxx@xxx.iam.gserviceaccount.com. 
+- Go to your Google Spreadsheets and shared the edit permission to the email address.
 
 # Formula Example
 
@@ -118,6 +123,5 @@ let values = [
 ```
 
 # Links
-- https://developers.google.com/google-apps/spreadsheets/
-- https://www.npmjs.com/package/google-spreadsheet
 - https://www.npmjs.com/package/array-to-google-sheets
+- https://www.npmjs.com/package/google-auth-library

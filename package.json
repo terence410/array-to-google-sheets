@@ -1,8 +1,8 @@
 {
   "author": "Terence",
   "name": "array-to-google-sheets",
-  "description": "Update a 2 dimensional Array to Google Sheets (Spreadsheets). Written in Typescript.",
-  "version": "1.2.0",
+  "description": "Update a 2 dimensional Array to Google Sheets (Spreadsheets). Written in Typescript. Support generating formula with ease.",
+  "version": "2.0.0",
   "homepage": "https://github.com/terence410/array-to-google-sheets",
   "repository": {
     "type": "git",
@@ -13,14 +13,13 @@
     "node": ">=6.0"
   },
   "scripts": {
-    "test": "",
+    "test": "mocha --exit --timeout 10000 -r ts-node/register tests/*.ts",
     "test:all": "nyc --reporter=json --reporter=text mocha --exit --timeout 10000 -r ts-node/register tests/*.ts",
-    "npm:minor": "npm version minor",
     "npm:patch": "npm version patch",
     "build": "tsc"
   },
   "dependencies": {
-    "google-spreadsheet": "^2.0.8"
+    "google-auth-library": "^5.9.2"
   },
   "devDependencies": {
     "@types/chai": "^4.2.3",
@@ -31,6 +30,7 @@
     "mocha": "^4.0.1",
     "ts-node": "^8.5.0",
     "typescript": "^3.7.2",
+    "csv-parse": "^4.8.5",
     "nyc": "^15.0.0"
   },
   "keywords": [

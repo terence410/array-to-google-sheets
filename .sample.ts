@@ -1,44 +1,52 @@
-import {ArrayToGoogleSheets} from "./src/index";
+import {ArrayToGoogleSheets, IUpdateOptions} from "./src/index";
 
-async function main() {
-    // init the library
-    const docKey = "Google Sheets Key";
-    const keyFilename = "./google-creds.json"; // file or json object both ok
-    const sheetName = "Sheet Name";
-    const a2gs = new ArrayToGoogleSheets(docKey, keyFilename);
+async function simple() {
+    const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
+    const spreadsheet = await googleSheets.getSpreadsheet("19Ef3falKKiHAOo3Ps13tVC9M0BaG-NoYngAZggt8Jzk-NodnEAz5gt3iak");
+    await spreadsheet.updateSheet("sheetName", [[1, 2, 3]]);
+}
 
-    // save array
-    const array2d = [
-        [1, 2, 3.5555],
-        [4, 5, 6],
-        ["a", "b", "c"],
-        [{formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
+async function advance() {
+    // https://www.npmjs.com/package/google-auth-library
+
+    // service account json (either one)
+    const keyFilename = "serviceAccount.json";
+    // credentials for service account (either one)
+    const credentials = {client_email: "", private_key: ""};
+
+    const spreadsheetId = "";
+    const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
+    const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+    const {spreadsheetUrl, properties} = spreadsheet;
+    const {title, locale, timeZone, defaultFormat} = properties;
+
+    // find and delete
+    const sheetName = "sheetName";
+    const sheet = await spreadsheet.findSheet(sheetName);
+    if (sheet) {
+        const result = await sheet.delete();
+    }
+
+    // get sheet again
+    const newSheet = await spreadsheet.findOrCreateSheet(sheetName);
+    const url = newSheet.getUrl();
+
+    //  update
+    const values1 = [
+        [1, 2, 3],
+        [1.1, 2.2, -3.33],
+        ["abc", "cde", "xyz"],
     ];
+    const updateOptions: IUpdateOptions = {
+        minRow: 3, // styling
+        minColumn: 3, // styling
+        margin: 2,  // styling
+        fitToSize: true,  // remove empty cells
+        clearAllValues: true, // clear all existing values
+    };
+    const updateResult1 = await newSheet.update(values1, updateOptions);
+    const resultValues1 = await newSheet.getValues();
 
-    // Options:
-    // margin: Extra blank cells, for better styling ^_^
-    // minRow: Min. Rows
-    // minCol: Min. Cols
-    // resize: Resize the worksheet according to the array size
-    // clear: Clear all cell values before updating the cells
-    const {url, gid} = await a2gs.updateWorkSheet(sheetName, array2d,
-        {margin: 2, minRow: 10, minCol: 10, resize: true, clear: true});
-
-    // get doc info object (from google-spreadsheet)
-    const docInfo = await a2gs.getDocInfo();
-    const {id, title, updated, worksheets, author} = docInfo;
-
-    // get all sheet names
-    const sheetNames = docInfo.worksheets.map(x => x.title);
-
-    // get workSheet
-    const workSheet = docInfo.worksheets[0];
-
-    // query data from spreadsheet
-    const array = await a2gs.getWorkSheetDataAsArray("sheetName");
-    const csv = await a2gs.getWorkSheetDataAsCsv("sheetName");
-
-    // you can also pass an array as parameters, it will return array
-    const arrayList = await a2gs.getWorkSheetDataAsArray(["sheetName"]);
-    const csvList = await a2gs.getWorkSheetDataAsCsv(["sheetName"]);
+    // export into csv
+    await newSheet.exportAsCsv("data.csv");
 }

@@ -1,35 +1,22 @@
-declare module "google-spreadsheet" {
-    export default class GoogleSpreadsheet {
-        constructor(dockey: string);
+export type IUpdateOptions = {
+    minRow: number,
+    minColumn: number,
+    margin: number,
+    fitToSize: boolean,
+    clearAllValues: boolean,
+};
 
-        public updateGoogleSheets(sheetName: string, array2D: any[][]): Promise<{url: string, gid: number}>;
-        public useServiceAccountAuth(options: any, callback: (err: Error) => void): void;
-        public getInfo(callback: (err: Error, docInfo: DocInfo) => void): void;
-        public addWorksheet(options: any, callback: (err: Error, sheet: WorkSheet) => void): void;
-    }
-
-    export type DocInfo = {
-        id: string,
-        title: string,
-        updated: string,
-        author: {name: string, email: string},
-        worksheets: WorkSheet[],
-    };
-
-    export type WorkSheet = {
-        url: string,
-        id: string,
-        title: string,
-        rowCount: number,
-        colCount: number,
-        resize: (options: any, callback: (err?: Error) => void) => void;
-        setTitle: (options: any, callback: (err?: Error) => void) => void;
-        clear: (options: any, callback: (err?: Error) => void) => void;
-        getRows: (options: any, callback: (err?: Error) => void) => void;
-        getCells: (options: any, callback: (err: Error, cells: any[]) => void) => void;
-        addRow: (options: any, callback: (err?: Error) => void) => void;
-        bulkUpdateCells: (data: any[], callback: (err: Error) => void) => void;
-        del: (options: any, callback: (err?: Error) => void) => void;
-        setHeaderRow: (options: any, callback: (err?: Error) => void) => void;
-    };
-}
+/** @internal */
+export type IFormulaCells = Array<{row?: number | string, col?: number | string}>;
+/** @internal */
+export type IFormula = {formula: string, cells: IFormulaCells};
+/** @internal */
+export type IValues = Array<Array<number | string | IFormula>>;
+/** @internal */
+export type IPlainValues = Array<Array<number | string>>;
+/** @internal */
+export type IUpdateResponse = {
+    updatedRows: number;
+    updatedColumns: number;
+    updatedCells: number;
+};
