@@ -14,7 +14,7 @@
   },
   "scripts": {
     "test": "mocha --exit --timeout 10000 -r ts-node/register tests/*.ts",
-    "test:all": "nyc --reporter=json --reporter=text mocha --exit --timeout 10000 -r ts-node/register tests/*.ts",
+    "test:nyc": "nyc --reporter=json --reporter=text mocha --exit --timeout 10000 -r ts-node/register tests/*.ts",
     "npm:patch": "npm version patch",
     "build": "tsc"
   },

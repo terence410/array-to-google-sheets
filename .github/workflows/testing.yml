@@ -28,7 +28,11 @@ jobs:
       run: |
         npm install
         npm run build
-        npm run test:all
+        npm run test:nyc
+      env:
+        CLIENT_EMAIL: ${{secrets.CLIENT_EMAIL }}
+        PRIVATE_KEY: ${{secrets.PRIVATE_KEY }}
+        SPREADSHEET_ID: ${{secrets.SPREADSHEET_ID }}
 
     - name: Upload code coverage
       if: env.CODECOV_TOKEN != ''
