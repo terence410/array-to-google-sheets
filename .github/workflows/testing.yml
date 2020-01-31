@@ -33,11 +33,3 @@ jobs:
         CLIENT_EMAIL: ${{secrets.CLIENT_EMAIL }}
         PRIVATE_KEY: ${{secrets.PRIVATE_KEY }}
         SPREADSHEET_ID: ${{secrets.SPREADSHEET_ID }}
-
-    - name: Upload code coverage
-      if: env.CODECOV_TOKEN != ''
-      run: |
-        npm install codecov@latest -g
-        npm run test:coverage
-        mv coverage/coverage-final.json coverage/coverage.json
-        codecov

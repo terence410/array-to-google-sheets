@@ -28,7 +28,7 @@ describe.only("general", () => {
         const {spreadsheetUrl, properties} = spreadsheet;
         const {title, locale, timeZone, defaultFormat} = properties;
 
-        const sheetName = "basic";
+        const sheetName = "sheetName-" + process.version ;
         const sheet = await spreadsheet.findSheet(sheetName);
         if (sheet) {
             const result = await sheet.delete();
@@ -60,7 +60,7 @@ describe.only("general", () => {
     it("formula", async () => {
         const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
-        const sheetName = "formula";
+        const sheetName = "formula-" + process.version;
         
         const values = [
             [1, 2, 3, {formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
@@ -91,7 +91,7 @@ describe.only("general", () => {
         const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
 
-        const sheetName = "csv";
+        const sheetName = "csv-" + process.version;
         const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 
         const values1 = [
@@ -121,7 +121,7 @@ describe.only("general", () => {
     });
 
     // completed in 23s for 10000 * 100 records, Need around 20MB allocations
-    it.skip("massive operation", async () => {
+    it("massive operation", async () => {
         function checkMemory() {
             const {heapUsed, heapTotal} = process.memoryUsage();
             console.log(`heap: ${heapUsed / 1024 / 1024 | 0}MB, healTotal: ${heapTotal / 1024 / 1024 | 0}MB`);
@@ -132,19 +132,21 @@ describe.only("general", () => {
         const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
 
-        const sheetName = "massive";
-        const totalRow = 10000;
-        const totalColumn = 100;
+        const sheetName = "massive:" + process.version;
+        const totalRow = 2000;
+        const totalColumn = 50;
         const values = Array(totalRow).fill(0).map((x, i) => Array(totalColumn).fill(i));
 
         const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 
-        const updateResult = await sheet.update(values);
+        const updateResult = await sheet.update(values, {clearAllValues: true});
         assert.equal(updateResult.updatedRows, totalRow);
         assert.equal(updateResult.updatedColumns, totalColumn);
         assert.equal(updateResult.updatedCells, totalRow * totalColumn);
 
         const resultValues = await sheet.getValues();
-        assert.deepEqual(resultValues, values);
-    }).timeout(60 * 1000);
+        assert.equal(resultValues.length, totalRow);
+        assert.deepEqual(resultValues[0], values[0]);
+        assert.deepEqual(resultValues.slice(-1), values.slice(-1));
+    }).timeout(20 * 1000);
 });

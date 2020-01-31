@@ -23,7 +23,7 @@ jobs:
         run: |
           npm install
           npm run build --if-present
-          npm run test
+          npm run test:nyc
         env:
           CLIENT_EMAIL: ${{secrets.CLIENT_EMAIL }}
           PRIVATE_KEY: ${{secrets.PRIVATE_KEY }}
@@ -39,3 +39,11 @@ jobs:
           fi
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
+      - name: Upload code coverage
+        if: env.CODECOV_TOKEN != ''
+        run: |
+          npm install codecov@latest -g
+          npm run test:coverage
+          mv coverage/coverage-final.json coverage/coverage.json
+          codecov
