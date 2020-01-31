@@ -1,4 +1,4 @@
-import {ArrayToGoogleSheets, IUpdateOptions} from "./src/index";
+import {ArrayToGoogleSheets, IUpdateOptions} from "./src/";
 
 async function simple() {
     const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
