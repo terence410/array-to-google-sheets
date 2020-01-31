@@ -1,34 +1,38 @@
 import { assert, expect } from "chai";
 import {config} from "dotenv";
 config();
+import crypto from "crypto";
 import csvParse from "csv-parse";
 import "mocha";
 import {ArrayToGoogleSheets} from "../src/ArrayToGoogleSheets";
+
+export function generateRandomString(length: number = 16) {
+    const value = crypto.randomBytes(Math.ceil(length / 2)).toString("hex");
+    return value.substr(0, length);
+}
 
 const spreadsheetId = process.env.SPREADSHEET_ID || "";
 const keyFilename = process.env.KEY_FILENAME || "";
 const clientEmail = process.env.CLIENT_EMAIL;
 const privateKey = process.env.PRIVATE_KEY;
 const credentials = clientEmail && privateKey ? {client_email: clientEmail, private_key: privateKey} : undefined;
+const sheetName = generateRandomString();
+const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
 
 describe.only("general", () => {
-    let memory = 0;
-    beforeEach(() => {
-        memory = process.memoryUsage().heapUsed;
-    });
-
-    afterEach(() => {
-        const memoryDiff = process.memoryUsage().heapUsed - memory;
-        console.log(`Used memory: ${memoryDiff / 1024 / 1024 | 0}MB`);
+    afterEach(async () => {
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+        const sheet = await spreadsheet.findSheet(sheetName);
+        if (sheet) {
+            await sheet.delete();
+        }
     });
 
     it("basic operation", async () => {
-        const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const {spreadsheetUrl, properties} = spreadsheet;
         const {title, locale, timeZone, defaultFormat} = properties;
 
-        const sheetName = "sheetName-" + process.version ;
         const sheet = await spreadsheet.findSheet(sheetName);
         if (sheet) {
             const result = await sheet.delete();
@@ -55,13 +59,14 @@ describe.only("general", () => {
         const updateResult2 = await spreadsheet.updateSheet(sheetName, values2, {clearAllValues: true});
         const resultValues2 = await newSheet.getValues();
         assert.deepEqual(resultValues2, [[1, 2, 3], [6]]);
+
+        // clean up
+        await newSheet.delete();
     });
 
     it("formula", async () => {
-        const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
-        const sheetName = "formula-" + process.version;
-        
+
         const values = [
             [1, 2, 3, {formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: 1, col: 3}]}], // =sum(A1:C1)
             [4, 5, 6, {formula: "=%1/50", cells: [{row: 1, col: 3}]}], // =C1/50
@@ -85,13 +90,13 @@ describe.only("general", () => {
                 [ 18 ],
             ],
         );
+
+        // clean up
+        await sheet.delete();
     });
 
     it("csv", async () => {
-        const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
-
-        const sheetName = "csv-" + process.version;
         const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 
         const values1 = [
@@ -118,6 +123,9 @@ describe.only("general", () => {
         });
 
         assert.deepEqual(resultValues, values1);
+
+        // clean up
+        await sheet.delete();
     });
 
     // completed in 23s for 10000 * 100 records, Need around 20MB allocations
@@ -129,10 +137,7 @@ describe.only("general", () => {
         setInterval(checkMemory, 1000);
         checkMemory();
 
-        const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
-
-        const sheetName = "massive:" + process.version;
         const totalRow = 2000;
         const totalColumn = 50;
         const values = Array(totalRow).fill(0).map((x, i) => Array(totalColumn).fill(i));
@@ -148,5 +153,8 @@ describe.only("general", () => {
         assert.equal(resultValues.length, totalRow);
         assert.deepEqual(resultValues[0], values[0]);
         assert.deepEqual(resultValues.slice(-1), values.slice(-1));
+
+        // clean up
+        await sheet.delete();
     }).timeout(20 * 1000);
 });

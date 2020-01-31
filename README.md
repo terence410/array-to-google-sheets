@@ -24,6 +24,7 @@ The library is build with [Google Sheets API v4](https://developers.google.com/s
   - {formula: '=sum(%1:%2)', cells: [{row: 1, col: 1}, {row: 1, col: 3}]}
   - equivalent to =sum(A1:C1)
 - Get Spreadsheets data in array or csv format
+- Can handle multiple sheet
 
 # Usage
 
