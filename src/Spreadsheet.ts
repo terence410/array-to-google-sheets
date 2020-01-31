@@ -65,6 +65,11 @@ export class Spreadsheet {
         return this.sheets.find(x => x.title.toLowerCase() === name.toLowerCase() && !x.isDeleted);
     }
 
+    public findSheets(names: string[]): Sheet[] {
+        names = names.map(x => x.toLowerCase());
+        return this.sheets.filter(x => names.includes(x.title.toLowerCase()) && !x.isDeleted);
+    }
+
     public async createSheet(name: string): Promise<Sheet> {
         const client = this[clientSymbol];
         const url = `/${this.spreadsheetId}:batchUpdate`;

@@ -97,8 +97,11 @@ https://docs.google.com/spreadsheets/d/{docKey}/
   - Grant this service account access to project > CONTINUE
   - Grant users access to this service account ( > CREATE KEY
   - Save the key file into your project
-- Enable Drive API
-  -  [APIs and Services](https://console.cloud.google.com/apis/dashboard) > + Enable APIS AND SERVICES > Search Google Drive API > Enable
+- Enable Drive API & Google Sheets API
+  -  [APIs and Services](https://console.cloud.google.com/apis/dashboard) > Enable APIS AND SERVICES 
+  - Search Google Drive API > Enable
+  - Search Google Sheets API > Enable
+- Enable Google Sheets API
 - Open the JSON key file, you will find an email xxx@xxx.iam.gserviceaccount.com. 
 - Go to your Google Spreadsheets and shared the edit permission to the email address.
 

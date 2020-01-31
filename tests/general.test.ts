@@ -41,6 +41,10 @@ describe.only("general", () => {
         // get sheet again
         const newSheet = await spreadsheet.findOrCreateSheet(sheetName);
 
+        // find sheet
+        const sheets = spreadsheet.findSheets([sheetName]);
+        assert.equal(sheets.length, 1);
+
         //  update
         const values1 = [
             [1, 2, 3],
