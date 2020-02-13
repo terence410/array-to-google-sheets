@@ -63,7 +63,8 @@ export class Sheet {
             valueRenderOption: "UNFORMATTED_VALUE",
         };
         const res = await client.request({ baseURL: GOOGLE_SPREADSHEETS_URL, url, params});
-        return (res.data as any).values as IPlainValues;
+        const values = (res.data as any).values;
+        return (values || []) as IPlainValues;
     }
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/clear

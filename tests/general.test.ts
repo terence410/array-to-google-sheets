@@ -17,6 +17,7 @@ const clientEmail = process.env.CLIENT_EMAIL;
 const privateKey = process.env.PRIVATE_KEY;
 const credentials = clientEmail && privateKey ? {client_email: clientEmail, private_key: privateKey} : undefined;
 const sheetName = generateRandomString();
+const emptySheetName = generateRandomString();
 const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
 
 describe.only("general", () => {
@@ -66,6 +67,12 @@ describe.only("general", () => {
 
         // clean up
         await newSheet.delete();
+
+        // try empty sheet
+        const emptySheet = await spreadsheet.findOrCreateSheet(emptySheetName);
+        const emptyValues = await emptySheet.getValues();
+        assert.deepEqual(emptyValues, []);
+        await emptySheet.delete();
     });
 
     it("formula", async () => {
