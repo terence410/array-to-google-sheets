@@ -50,3 +50,8 @@ async function advance() {
     // export into csv
     await newSheet.exportAsCsv("data.csv");
 }
+
+async function massive() {
+    // expand the sheet size first if u have many rows
+
+}

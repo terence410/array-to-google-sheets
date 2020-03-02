@@ -1,60 +1,28 @@
-import {GoogleAuth, JWT} from "google-auth-library";
+import {JWT} from "google-auth-library";
 import {Sheet} from "./Sheet";
-import {IUpdateOptions, IValues} from "./types";
+import {ISpreadsheetProperties, IUpdateOptions, IValues} from "./types";
 
 const GOOGLE_SPREADSHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets";
-const clientSymbol = Symbol("client");
-
-type ISpreadsheetProperties = {
-    title: string
-    locale: string,
-    autoRecalc: string,
-    timeZone: string,
-    defaultFormat: {
-        background: {red: number, green: number, blue: number},
-        padding: {top: number, right: number, bottom: number, left: number},
-        verticalAlignment: string,
-        wrapStrategy: string,
-        textFormat: {
-            foregroundColor: any,
-            fontFamily: string,
-            fontSize: number,
-            bold: boolean,
-            italic: boolean,
-            strikethrough: boolean,
-            underline: boolean,
-        },
-    },
-    spreadsheetTheme: {
-        primaryFontFamily: string,
-        themeColors: Array<{
-            colorType: string,
-            color: {
-                rgbColor: {
-                    red: number,
-                    green: number,
-                    blue: number,
-                },
-            },
-        }>,
-    },
-};
 
 export class Spreadsheet {
     public spreadsheetId!: string;
     public spreadsheetUrl!: string;
     public properties!: ISpreadsheetProperties;
     public sheets!: Sheet[];
-    private [clientSymbol]: JWT;
 
     constructor(spreadsheetId: string, jwt: JWT) {
         this.spreadsheetId = spreadsheetId;
-        this[clientSymbol] = jwt;
+
+        // hide the property from console.log
+        Object.defineProperty(this, "jwt", {
+            enumerable: false,
+            value: jwt,
+        });
     }
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
     public async init() {
-        const client = this[clientSymbol];
+        const client = this._getClient();
         const url = `/${this.spreadsheetId}/`;
         const params = {includeGridData: false, ranges: []};
         const res = await client.request({ baseURL: GOOGLE_SPREADSHEETS_URL, url, params});
@@ -71,7 +39,7 @@ export class Spreadsheet {
     }
 
     public async createSheet(name: string): Promise<Sheet> {
-        const client = this[clientSymbol];
+        const client = this._getClient();
         const url = `/${this.spreadsheetId}:batchUpdate`;
         const params = {};
         const body = {
@@ -99,9 +67,14 @@ export class Spreadsheet {
         return await sheet.update(values, options);
     }
 
+    private _getClient(): JWT {
+        return (this as any).jwt as JWT;
+    }
+
     private _syncProperties(data: any) {
+        const client = this._getClient();
         this.spreadsheetUrl = data.spreadsheetUrl;
         this.properties = data.properties;
-        this.sheets = (data.sheets as any[]).map(x => new Sheet(this[clientSymbol], this.spreadsheetId, x.properties));
+        this.sheets = (data.sheets as any[]).map(x => new Sheet(client, this.spreadsheetId, x.properties));
     }
 }

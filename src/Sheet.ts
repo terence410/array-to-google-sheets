@@ -1,12 +1,19 @@
 import fs from "fs";
-import {GoogleAuth, JWT} from "google-auth-library";
-import {IFormulaCells, IPlainValues, IUpdateOptions, IUpdateResponse, IValues} from "./types";
+import {JWT} from "google-auth-library";
+import {
+    ICell,
+    IFormulaCells, INormalizedCell,
+    INormalizedRow,
+    INormalizedValues,
+    IRow,
+    IUpdateOptions,
+    IUpdateResponse,
+    IValues,
+} from "./types";
 
 const GOOGLE_SPREADSHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets";
-const clientSymbol = Symbol("auth");
 
 export class Sheet {
-    public [clientSymbol]: JWT;
     public isDeleted = false;
     public spreadsheetId!: string;
     public sheetId!: number;
@@ -21,7 +28,12 @@ export class Sheet {
     constructor(jwt: JWT, spreadsheetId: string, properties: object) {
         this.spreadsheetId = spreadsheetId;
         Object.assign(this, properties);
-        this[clientSymbol] = jwt;
+
+        // hide the property from console.log
+        Object.defineProperty(this, "jwt", {
+            enumerable: false,
+            value: jwt,
+        });
     }
 
     /** @internal */
@@ -55,8 +67,8 @@ export class Sheet {
     }
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get
-    public async getValues(): Promise<IPlainValues> {
-        const client = this[clientSymbol];
+    public async getValues(): Promise<INormalizedValues> {
+        const client = this._getClient();
         const range = this._getRange();
         const url = `/${this.spreadsheetId}/values/${range}`;
         const params = {
@@ -64,13 +76,13 @@ export class Sheet {
         };
         const res = await client.request({ baseURL: GOOGLE_SPREADSHEETS_URL, url, params});
         const values = (res.data as any).values;
-        return (values || []) as IPlainValues;
+        return (values || []) as INormalizedValues;
     }
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/clear
     /** @internal */
     public async clear() {
-        const client = this[clientSymbol];
+        const client = this._getClient();
         const range = this._getRange();
         const url = `/${this.spreadsheetId}/values/${range}:clear`;
         const params = {};
@@ -79,8 +91,18 @@ export class Sheet {
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#SheetProperties
     /** @internal */
-    public async fitToSize(rowCount: number, columnCount: number) {
-        const client = this[clientSymbol];
+    public async resize(rowCount: number, columnCount: number, isExpand: boolean = false) {
+        // if this is an expand, we check to see if it's really necessary, to avoid some sync update problem
+        if (isExpand) {
+            if (rowCount <= this.gridProperties.rowCount && columnCount <= this.gridProperties.columnCount) {
+                return;
+            }
+        }
+
+        this.gridProperties.rowCount = rowCount;
+        this.gridProperties.columnCount = columnCount;
+
+        const client = this._getClient();
         const url = `/${this.spreadsheetId}:batchUpdate`;
         const params = {};
         const body = {
@@ -88,22 +110,21 @@ export class Sheet {
                 {
                     updateSheetProperties: {
                         fields: "*",
-                        properties: {sheetId: this.sheetId, title: this.title, gridProperties: {rowCount, columnCount}},
+                        properties: {sheetId: this.sheetId, title: this.title, gridProperties: this.gridProperties},
                     },
                 },
             ],
-            includeSpreadsheetInResponse: true,
+            includeSpreadsheetInResponse: false,
         };
-        const res = await client.request({ baseURL: GOOGLE_SPREADSHEETS_URL, url, params, data: body, method: "POST"});
-        this.gridProperties.rowCount = rowCount;
-        this.gridProperties.columnCount = columnCount;
+        const res = await client.request({baseURL: GOOGLE_SPREADSHEETS_URL, url, params, data: body, method: "POST"});
     }
 
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/batchUpdate
     public async delete() {
         // mark as deleted
         this.isDeleted = true;
 
-        const client = this[clientSymbol];
+        const client = this._getClient();
         const url = `/${this.spreadsheetId}:batchUpdate`;
         const params = {};
         const body = {
@@ -114,7 +135,7 @@ export class Sheet {
                     },
                 },
             ],
-            includeSpreadsheetInResponse: true,
+            includeSpreadsheetInResponse: false,
         };
         const res = await client.request({ baseURL: GOOGLE_SPREADSHEETS_URL, url, params, data: body, method: "POST"});
         return res.data;
@@ -131,21 +152,8 @@ export class Sheet {
         const finalTotalRows = totalRows + extraRows;
         const finalTotalColumns = totalColumns + extraColumns;
 
-        // fit size
-        if (options.fitToSize || (finalTotalRows > this.gridProperties.rowCount && finalTotalColumns > this.gridProperties.columnCount)) {
-            await this.fitToSize(finalTotalRows, finalTotalColumns);
-
-        } else if (finalTotalRows > this.gridProperties.rowCount) {
-            await this.fitToSize(finalTotalRows, this.gridProperties.columnCount);
-
-        } else if (finalTotalColumns > this.gridProperties.columnCount) {
-
-            await this.fitToSize(this.gridProperties.rowCount, finalTotalColumns);
-        }
-
-        // update gird properties
-        this.gridProperties.rowCount = Math.max(this.gridProperties.rowCount, finalTotalRows);
-        this.gridProperties.columnCount = Math.max(this.gridProperties.columnCount, finalTotalColumns);
+        // sync grid size first
+        await this._syncGridSize(finalTotalRows, finalTotalColumns, options.fitToSize);
 
         // clear the entire sheet first
         if (options.clearAllValues) {
@@ -153,7 +161,7 @@ export class Sheet {
         }
 
         const batch = 1000;
-        const client = this[clientSymbol];
+        const client = this._getClient();
         const params = {
             valueInputOption: "USER_ENTERED",
         };
@@ -162,9 +170,8 @@ export class Sheet {
         for (let i = 0; i < Math.ceil(totalRows / batch); i++) {
             const offsetY = i * batch;
             const offsetX = 0;
-            
             const range = this._getRange(totalColumns, batch, offsetX, offsetY);
-            
+
             const url = `/${this.spreadsheetId}/values/${range}`;
             const normalizedValues = this._normalizeValues(values.slice(i * batch, (i + 1) * batch));
             const body = {values: normalizedValues};
@@ -185,7 +192,59 @@ export class Sheet {
         return updateResponse;
     }
 
+    public async updateRow(rowIndex: number, row: IRow): Promise<IUpdateResponse> {
+        // sync grid size first
+        await this._syncGridSize(rowIndex + 1, row.length, false);
+
+        const client = this._getClient();
+        const range = this._getRange(row.length, 1, 0, rowIndex);
+        const params = {
+            valueInputOption: "USER_ENTERED",
+        };
+        const url = `/${this.spreadsheetId}/values/${range}`;
+        const normalizedRow = this._normalizeRow(rowIndex, row);
+        const body = {values: [normalizedRow]};
+        const res = await client.request({
+            baseURL: GOOGLE_SPREADSHEETS_URL,
+            url,
+            params,
+            data: body,
+            method: "PUT",
+        });
+
+        const updateResponse: IUpdateResponse = {updatedCells: 0, updatedColumns: 0, updatedRows: 0};
+        return this._addUpdateResponse(updateResponse, res.data as IUpdateResponse);
+    }
+
+    public async updateCell(rowIndex: number, columnIndex: number, cell: ICell): Promise<IUpdateResponse> {
+        // sync grid size first
+        await this._syncGridSize(rowIndex + 1, columnIndex + 1, false);
+
+        const client = this._getClient();
+        const range = this._getRange(1, 1, columnIndex, rowIndex);
+        const params = {
+            valueInputOption: "USER_ENTERED",
+        };
+        const url = `/${this.spreadsheetId}/values/${range}`;
+        const normalizedCell = this._normalizeCell(rowIndex, columnIndex, cell);
+        const body = {values: [[normalizedCell]]};
+        const res = await client.request({
+            baseURL: GOOGLE_SPREADSHEETS_URL,
+            url,
+            params,
+            data: body,
+            method: "PUT",
+        });
+
+        const updateResponse: IUpdateResponse = {updatedCells: 0, updatedColumns: 0, updatedRows: 0};
+        return this._addUpdateResponse(updateResponse, res.data as IUpdateResponse);
+    }
+
     // region private methods
+
+    private _getClient(): JWT {
+        return (this as any).jwt as JWT;
+    }
 
     private _convertColToAlphabet(num: number): string {
         const char = (10 + (num - 1) % 26).toString(36).toUpperCase();
@@ -202,20 +261,38 @@ export class Sheet {
         }
 
         const rangeA = `${this._convertColToAlphabet(offsetX + 1)}${offsetY + 1}`;
-        const rangeB = `${this._convertColToAlphabet(width)}${offsetY + height + 1}`;
+        const rangeB = `${this._convertColToAlphabet(offsetX + width)}${offsetY + height}`;
         return `${this.title}!${rangeA}:${rangeB}`;
     }
 
-    private _normalizeValues(values: IValues): Array<Array<number | string>> {
+    private _normalizeValues(values: IValues): INormalizedValues {
         return values.map((row, i) => {
-            return row.map((value, j) => {
-                if (typeof value === "object") {
-                    return this._formatFormula(value.formula, value.cells, i + 1, j + 1);
-                } 
-                
-                return value;
+            return row.map((cell, j) => {
+                if (typeof cell === "object") {
+                    return this._formatFormula(cell.formula, cell.cells, i + 1, j + 1);
+                }
+
+                return cell;
             });
         });
+    }
+
+    private _normalizeRow(rowIndex: number, row: IRow): INormalizedRow {
+        return row.map((cell, j) => {
+            if (typeof cell === "object") {
+                return this._formatFormula(cell.formula, cell.cells, rowIndex + 1, j + 1);
+            }
+
+            return cell;
+        });
+    }
+
+    private _normalizeCell(rowIndex: number, columnIndex: number, cell: ICell): INormalizedCell {
+        if (typeof cell === "object") {
+            return this._formatFormula(cell.formula, cell.cells, rowIndex + 1, columnIndex + 1);
+        }
+
+        return cell;
     }
 
     private _formatFormula(formulaFormat: string, formulaCells: IFormulaCells, currentRow: number, currentCol: number) {
@@ -230,6 +307,29 @@ export class Sheet {
         });
 
         return formulaFormat.replace(/%(\d+)/g, (_, m) => cells[--m]);
+    }
+
+    private async _syncGridSize(finalTotalRows: number, finalTotalColumns: number, forceUpdate: boolean) {
+        if (forceUpdate) {
+            await this.resize(finalTotalRows, finalTotalColumns, false);
+
+        } else if (finalTotalRows > this.gridProperties.rowCount && finalTotalColumns > this.gridProperties.columnCount) {
+            await this.resize(finalTotalRows, finalTotalColumns, true);
+
+        } else if (finalTotalRows > this.gridProperties.rowCount) {
+            await this.resize(finalTotalRows, this.gridProperties.columnCount, true);
+
+        } else if (finalTotalColumns > this.gridProperties.columnCount) {
+            await this.resize(this.gridProperties.rowCount, finalTotalColumns, true);
+
+        }
+    }
+
+    private _addUpdateResponse(updateResponse: IUpdateResponse, newUpdateResponse: IUpdateResponse) {
+        updateResponse.updatedRows += newUpdateResponse.updatedRows;
+        updateResponse.updatedColumns = Math.max(updateResponse.updatedColumns, newUpdateResponse.updatedColumns);
+        updateResponse.updatedCells += newUpdateResponse.updatedCells;
+        return updateResponse;
     }
 
     // endregion

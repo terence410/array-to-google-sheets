@@ -5,6 +5,7 @@ import crypto from "crypto";
 import csvParse from "csv-parse";
 import "mocha";
 import {ArrayToGoogleSheets} from "../src/ArrayToGoogleSheets";
+import {IRow} from "../src/types";
 
 export function generateRandomString(length: number = 16) {
     const value = crypto.randomBytes(Math.ceil(length / 2)).toString("hex");
@@ -137,6 +138,56 @@ describe.only("general", () => {
 
         // clean up
         await sheet.delete();
+    });
+
+    it("updateCell operations", async () => {
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+        const sheet = await spreadsheet.findOrCreateSheet(sheetName);
+
+        // resize it first
+        await sheet.resize(2, 2);
+
+        // add rows
+        const total = 4;
+        const promises: any[] = [];
+        for (let i = 0; i < total; i++) {
+            const formula = {formula: "=sum(%1:%2)", cells: [{row: "this", col: i + 1}, {row: "this", col: i + 1}]};
+            await sheet.updateCell(i, i, i);
+            await sheet.updateCell(i, i + 1, formula);
+        }
+
+        const sumFormula = {formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: total, col: total}]};
+        await sheet.updateCell(total, total, sumFormula);
+
+        const finalValues = await sheet.getValues();
+        assert.equal(finalValues.length, total + 1);
+        assert.equal(finalValues[total][total], Math.pow(total - 1, 2));
+    });
+
+    it("updateRow operations", async () => {
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+        const sheet = await spreadsheet.findOrCreateSheet(sheetName);
+
+        // resize it first
+        await sheet.resize(2, 2);
+
+        // add rows
+        const total = 5;
+        const promises: any[] = [];
+        for (let i = 0; i < total; i++) {
+            const row: IRow = Array(total).fill(0).map((x, j) => j + i);
+            row.push({formula: "=sum(%1:%2)", cells: [{row: "this", col: 1}, {row: "this", col: total}]});
+            await sheet.updateRow(i, row);
+        }
+
+        const finalValues = await sheet.getValues();
+        assert.equal(finalValues.length, total);
+
+        for (let i = 0; i < total; i++) {
+            const row = Array(total).fill(0).map((x, j) => j + i);
+            const sum = row.reduce((a, b) => a + b, 0);
+            assert.equal(sum, finalValues[i][total]);
+        }
     });
 
     // completed in 23s for 10000 * 100 records, Need around 20MB allocations
