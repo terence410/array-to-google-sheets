@@ -91,14 +91,8 @@ export class Sheet {
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#SheetProperties
     /** @internal */
-    public async resize(rowCount: number, columnCount: number, isExpand: boolean = false) {
-        // if this is an expand, we check to see if it's really necessary, to avoid some sync update problem
-        if (isExpand) {
-            if (rowCount <= this.gridProperties.rowCount && columnCount <= this.gridProperties.columnCount) {
-                return;
-            }
-        }
-
+    public async resize(rowCount: number, columnCount: number) {
+        // we update it first to avoid async problem
         this.gridProperties.rowCount = rowCount;
         this.gridProperties.columnCount = columnCount;
 
@@ -193,9 +187,6 @@ export class Sheet {
     }
 
     public async updateRow(rowIndex: number, row: IRow): Promise<IUpdateResponse> {
-        // sync grid size first
-        await this._syncGridSize(rowIndex + 1, row.length, false);
-
         const client = this._getClient();
         const range = this._getRange(row.length, 1, 0, rowIndex);
         const params = {
@@ -217,9 +208,6 @@ export class Sheet {
     }
 
     public async updateCell(rowIndex: number, columnIndex: number, cell: ICell): Promise<IUpdateResponse> {
-        // sync grid size first
-        await this._syncGridSize(rowIndex + 1, columnIndex + 1, false);
-
         const client = this._getClient();
         const range = this._getRange(1, 1, columnIndex, rowIndex);
         const params = {
@@ -311,16 +299,16 @@ export class Sheet {
 
     private async _syncGridSize(finalTotalRows: number, finalTotalColumns: number, forceUpdate: boolean) {
         if (forceUpdate) {
-            await this.resize(finalTotalRows, finalTotalColumns, false);
+            await this.resize(finalTotalRows, finalTotalColumns);
 
         } else if (finalTotalRows > this.gridProperties.rowCount && finalTotalColumns > this.gridProperties.columnCount) {
-            await this.resize(finalTotalRows, finalTotalColumns, true);
+            await this.resize(finalTotalRows, finalTotalColumns);
 
         } else if (finalTotalRows > this.gridProperties.rowCount) {
-            await this.resize(finalTotalRows, this.gridProperties.columnCount, true);
+            await this.resize(finalTotalRows, this.gridProperties.columnCount);
 
         } else if (finalTotalColumns > this.gridProperties.columnCount) {
-            await this.resize(this.gridProperties.rowCount, finalTotalColumns, true);
+            await this.resize(this.gridProperties.rowCount, finalTotalColumns);
 
         }
     }

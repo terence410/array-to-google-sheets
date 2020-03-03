@@ -12,6 +12,12 @@ export function generateRandomString(length: number = 16) {
     return value.substr(0, length);
 }
 
+function getMemory() {
+    const {heapUsed, heapTotal} = process.memoryUsage();
+    return {heapUsed, heapTotal};
+    // console.log(`heap: ${heapUsed / 1024 / 1024 | 0}MB, healTotal: ${heapTotal / 1024 / 1024 | 0}MB`);
+}
+
 const spreadsheetId = process.env.SPREADSHEET_ID || "";
 const keyFilename = process.env.KEY_FILENAME || "";
 const clientEmail = process.env.CLIENT_EMAIL;
@@ -140,36 +146,13 @@ describe.only("general", () => {
         await sheet.delete();
     });
 
-    it("updateCell operations", async () => {
-        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
-        const sheet = await spreadsheet.findOrCreateSheet(sheetName);
-
-        // resize it first
-        await sheet.resize(2, 2);
-
-        // add rows
-        const total = 4;
-        const promises: any[] = [];
-        for (let i = 0; i < total; i++) {
-            const formula = {formula: "=sum(%1:%2)", cells: [{row: "this", col: i + 1}, {row: "this", col: i + 1}]};
-            await sheet.updateCell(i, i, i);
-            await sheet.updateCell(i, i + 1, formula);
-        }
-
-        const sumFormula = {formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: total, col: total}]};
-        await sheet.updateCell(total, total, sumFormula);
-
-        const finalValues = await sheet.getValues();
-        assert.equal(finalValues.length, total + 1);
-        assert.equal(finalValues[total][total], Math.pow(total - 1, 2));
-    });
-
     it("updateRow operations", async () => {
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 
         // resize it first
-        await sheet.resize(2, 2);
+        await sheet.clear();
+        await sheet.resize(10, 10);
 
         // add rows
         const total = 5;
@@ -177,8 +160,9 @@ describe.only("general", () => {
         for (let i = 0; i < total; i++) {
             const row: IRow = Array(total).fill(0).map((x, j) => j + i);
             row.push({formula: "=sum(%1:%2)", cells: [{row: "this", col: 1}, {row: "this", col: total}]});
-            await sheet.updateRow(i, row);
+            promises.push(sheet.updateRow(i, row));
         }
+        await Promise.all(promises);
 
         const finalValues = await sheet.getValues();
         assert.equal(finalValues.length, total);
@@ -190,14 +174,49 @@ describe.only("general", () => {
         }
     });
 
-    // completed in 23s for 10000 * 100 records, Need around 20MB allocations
-    it("massive operation", async () => {
-        function checkMemory() {
-            const {heapUsed, heapTotal} = process.memoryUsage();
-            console.log(`heap: ${heapUsed / 1024 / 1024 | 0}MB, healTotal: ${heapTotal / 1024 / 1024 | 0}MB`);
+    it("updateCell operations", async () => {
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+        const sheet = await spreadsheet.findOrCreateSheet(sheetName);
+
+        // resize it first
+        await sheet.clear();
+        await sheet.resize(10, 10);
+
+        // add rows
+        const total = 4;
+        const promises: any[] = [];
+        for (let i = 0; i < total; i++) {
+            const formula = {formula: "=sum(%1:%2)", cells: [{row: "this", col: i + 1}, {row: "this", col: i + 1}]};
+            promises.push(sheet.updateCell(i, i, i));
+            promises.push(sheet.updateCell(i, i + 1, formula));
         }
-        setInterval(checkMemory, 1000);
-        checkMemory();
+        await Promise.all(promises);
+
+        const sumFormula = {formula: "=sum(%1:%2)", cells: [{row: 1, col: 1}, {row: total, col: total}]};
+        await sheet.updateCell(total, total, sumFormula);
+
+        const finalValues = await sheet.getValues();
+        assert.equal(finalValues.length, total + 1);
+        assert.equal(finalValues[total][total], Math.pow(total - 1, 2));
+    });
+
+    // completed in 23s for 10000 * 100 records, Need around 20MB allocations
+    it("massive operation with limited ram usage", async () => {
+        // max allow used memory is 30MB
+        const maxMemoryDiff = 20 * 1024 * 1024;
+        const initialMemory = getMemory();
+
+        function checkMemory() {
+            const currentMemory = getMemory();
+            const diffHeapUsed = currentMemory.heapUsed - initialMemory.heapUsed;
+            const diffHeapTotal = currentMemory.heapTotal - initialMemory.heapTotal;
+            if (diffHeapUsed > maxMemoryDiff) {
+                throw Error(`Memory error. Difference in Heap Used: ${diffHeapUsed / 1024 / 1024 | 0}`);
+            } else if (diffHeapTotal > maxMemoryDiff) {
+                throw Error(`Memory error. Difference in Heap Total: ${diffHeapTotal / 1024 / 1024 | 0}`);
+            }
+        }
+        const id = setInterval(checkMemory, 1000);
 
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const totalRow = 2000;
@@ -218,5 +237,7 @@ describe.only("general", () => {
 
         // clean up
         await sheet.delete();
+
+        clearInterval(id);
     }).timeout(20 * 1000);
 });
