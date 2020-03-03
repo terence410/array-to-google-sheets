@@ -1,4 +1,10 @@
-export type IUpdateOptions = {
+export const GOOGLE_SPREADSHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets";
+
+export type IUpdateBaseOptions = {
+    valueInputOption?: "RAW" | "USER_ENTERED",
+};
+
+export type IUpdateOptions = IUpdateBaseOptions & {
     minRow: number,
     minColumn: number,
     margin: number,

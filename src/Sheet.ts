@@ -1,17 +1,17 @@
 import fs from "fs";
 import {JWT} from "google-auth-library";
+import {ObjectSheet} from "./ObjectSheet";
 import {
+    GOOGLE_SPREADSHEETS_URL,
     ICell,
     IFormulaCells, INormalizedCell,
     INormalizedRow,
     INormalizedValues,
-    IRow,
+    IRow, IUpdateBaseOptions,
     IUpdateOptions,
     IUpdateResponse,
     IValues,
 } from "./types";
-
-const GOOGLE_SPREADSHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets";
 
 export class Sheet {
     public isDeleted = false;
@@ -64,6 +64,11 @@ export class Sheet {
         }
 
         return csv;
+    }
+
+    public async exportAsObjectSheet<T extends any>(): Promise<ObjectSheet<T>> {
+        const values = await this.getValues();
+        return new ObjectSheet<T>(this, values);
     }
 
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get
@@ -186,11 +191,11 @@ export class Sheet {
         return updateResponse;
     }
 
-    public async updateRow(rowIndex: number, row: IRow): Promise<IUpdateResponse> {
+    public async updateRow(rowIndex: number, row: IRow, options: IUpdateBaseOptions = {}): Promise<IUpdateResponse> {
         const client = this._getClient();
         const range = this._getRange(row.length, 1, 0, rowIndex);
         const params = {
-            valueInputOption: "USER_ENTERED",
+            valueInputOption: options.valueInputOption || "USER_ENTERED",
         };
         const url = `/${this.spreadsheetId}/values/${range}`;
         const normalizedRow = this._normalizeRow(rowIndex, row);
@@ -207,11 +212,11 @@ export class Sheet {
         return this._addUpdateResponse(updateResponse, res.data as IUpdateResponse);
     }
 
-    public async updateCell(rowIndex: number, columnIndex: number, cell: ICell): Promise<IUpdateResponse> {
+    public async updateCell(rowIndex: number, columnIndex: number, cell: ICell, options: IUpdateBaseOptions = {}): Promise<IUpdateResponse> {
         const client = this._getClient();
         const range = this._getRange(1, 1, columnIndex, rowIndex);
         const params = {
-            valueInputOption: "USER_ENTERED",
+            valueInputOption: options.valueInputOption || "USER_ENTERED",
         };
         const url = `/${this.spreadsheetId}/values/${range}`;
         const normalizedCell = this._normalizeCell(rowIndex, columnIndex, cell);

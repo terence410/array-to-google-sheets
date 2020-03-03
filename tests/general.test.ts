@@ -36,6 +36,7 @@ describe.only("general", () => {
         }
     });
 
+
     it("basic operation", async () => {
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const {spreadsheetUrl, properties} = spreadsheet;
@@ -146,7 +147,7 @@ describe.only("general", () => {
         await sheet.delete();
     });
 
-    it("updateRow operations", async () => {
+    it("updateRow", async () => {
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 
@@ -174,7 +175,7 @@ describe.only("general", () => {
         }
     });
 
-    it("updateCell operations", async () => {
+    it("updateCell", async () => {
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 
@@ -198,6 +199,46 @@ describe.only("general", () => {
         const finalValues = await sheet.getValues();
         assert.equal(finalValues.length, total + 1);
         assert.equal(finalValues[total][total], Math.pow(total - 1, 2));
+    });
+
+    it("export as SheetObject", async () => {
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+        const sheet = await spreadsheet.findOrCreateSheet(sheetName);
+
+        const values = [
+            ["value1", "value2/string", "value3/number", "value4/boolean", "value5/date", "value6/number[]", "value7/string[]", "value8/ignore"],
+            ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9],
+            ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
+        ];
+        await sheet.update(values, {clearAllValues: true, margin: 2});
+
+        type IObject = {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[]};
+        const objectSheet = await sheet.exportAsObjectSheet<IObject>();
+        const type = objectSheet.getType();
+        console.log("typescript", type);
+        assert.equal(objectSheet.length, values.length - 1);
+
+        for (let i = 0; i < objectSheet.length; i++) {
+            const item = objectSheet.get(i);
+            item.value1 = "key" + i;
+            item.value2 = "value" + i;
+            item.value3 = Math.random();
+            item.value4 = true;
+            item.value5 = new Date();
+            item.value6 = [i, 1, 2, Math.random()];
+            item.value7 = [i.toString(), "a", "b", "c"];
+            await item.save();
+        }
+
+        const objects = objectSheet.toObjects();
+
+        // get the data back and validate
+        const newObjectSheet = await sheet.exportAsObjectSheet<IObject>();
+        for (let i = 0; i < objectSheet.length; i++) {
+            const item = newObjectSheet.get(i);
+            assert.deepEqual(objects[i], item.toObject());
+        }
     });
 
     // completed in 23s for 10000 * 100 records, Need around 20MB allocations

@@ -1,8 +1,6 @@
 import {JWT} from "google-auth-library";
 import {Sheet} from "./Sheet";
-import {ISpreadsheetProperties, IUpdateOptions, IValues} from "./types";
-
-const GOOGLE_SPREADSHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets";
+import {GOOGLE_SPREADSHEETS_URL, ISpreadsheetProperties, IUpdateOptions, IValues} from "./types";
 
 export class Spreadsheet {
     public spreadsheetId!: string;
