@@ -4,10 +4,10 @@ import {INormalizedValues, IValues} from "./types";
 
 const sheetSymbol = Symbol("sheet");
 
-export class ObjectSheet<T extends any> {
+export class ObjectSheet<T extends object = object> {
   public rawHeaders: string[];
-  public headers: Array<{name: string, type: string}> = [];
-  public objects: any[] = [];
+  public headerTypes: Array<{name: string, type: string}> = [];
+  private _objects: any[] = [];
 
   constructor(sheet: Sheet, public rawValues: INormalizedValues) {
     this._validateValues();
@@ -25,6 +25,10 @@ export class ObjectSheet<T extends any> {
     return this.rawValues.length - 1;
   }
 
+  public get headers(): string[] {
+    return this.headerTypes.filter(x => x.type !== "ignore").map(x => x.name);
+  }
+
   public toObjects(): T[] {
     const objects: any[] = [];
     for (let i = 1; i < this.rawValues.length; i++) {
@@ -37,7 +41,7 @@ export class ObjectSheet<T extends any> {
 
   public getType() {
     const types: any = [];
-    for (const header of this.headers) {
+    for (const header of this.headerTypes) {
       const {name, type} = header;
       if (type !== "ignore") {
         types.push(`${name}: ${type}`);
@@ -49,12 +53,12 @@ export class ObjectSheet<T extends any> {
 
   public get(index: number): T & ObjectSheetRow<T>  {
     if (index < this.rawValues.length - 1) {
-      if (!this.objects[index]) {
+      if (!this._objects[index]) {
         const rawRowValues = this.rawValues[index + 1];
-        this.objects[index] = new ObjectSheetRow<T>(this._getSheet(), index, this.headers, rawRowValues);
+        this._objects[index] = new ObjectSheetRow<T>(this._getSheet(), index, this.headerTypes, rawRowValues);
       }
 
-      return this.objects[index] as T & ObjectSheetRow<T>;
+      return this._objects[index] as T & ObjectSheetRow<T>;
     }
     
     return undefined as any;
@@ -74,10 +78,10 @@ export class ObjectSheet<T extends any> {
         const name = matches[1];
         const type = (matches[3] === "date" ? "Date" : matches[3]) || "string";
 
-        if (this.headers.find(x => x.name === name) && type !== "ignore") {
+        if (this.headerTypes.find(x => x.name === name) && type !== "ignore") {
           throw new Error(`Object Sheet Error. Header with the name "${name}" already exist`);
         }
-        this.headers.push({name, type});
+        this.headerTypes.push({name, type});
 
       } else {
         throw new Error(`Object Sheet Error. Header "${rawHeader}" does not match with the regex: ${headerRegex}`);

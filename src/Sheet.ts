@@ -66,7 +66,7 @@ export class Sheet {
         return csv;
     }
 
-    public async exportAsObjectSheet<T extends any>(): Promise<ObjectSheet<T>> {
+    public async exportAsObjectSheet<T extends object = object>(): Promise<ObjectSheet<T>> {
         const values = await this.getValues();
         return new ObjectSheet<T>(this, values);
     }

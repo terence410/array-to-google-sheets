@@ -5,6 +5,7 @@ import crypto from "crypto";
 import csvParse from "csv-parse";
 import "mocha";
 import {ArrayToGoogleSheets} from "../src/ArrayToGoogleSheets";
+import {ObjectSheet} from "../src/ObjectSheet";
 import {IRow} from "../src/types";
 
 export function generateRandomString(length: number = 16) {
@@ -208,13 +209,15 @@ describe.only("general", () => {
             ["value1", "value2/string", "value3/number", "value4/boolean", "value5/date", "value6/number[]", "value7/string[]", "value7/ignore"],
             ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
             [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
+            ["", "b", "c", "d", "e", "", "", "h", "i"],
         ];
         await sheet.update(values, {clearAllValues: true, margin: 2});
 
         type IObject = {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[]};
         const objectSheet = await sheet.exportAsObjectSheet<IObject>();
         const type = objectSheet.getType();
+        const headers = objectSheet.headers; // string[]
+
         console.log("typescript", type);
         assert.equal(objectSheet.length, values.length - 1);
 
@@ -233,7 +236,7 @@ describe.only("general", () => {
         const objects = objectSheet.toObjects();
 
         // get the data back and validate
-        const newObjectSheet = await sheet.exportAsObjectSheet<IObject>();
+        const newObjectSheet = await sheet.exportAsObjectSheet();
         for (let i = 0; i < objectSheet.length; i++) {
             const item = newObjectSheet.get(i);
             assert.deepEqual(objects[i], item.toObject());
