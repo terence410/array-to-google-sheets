@@ -19,10 +19,12 @@ export type IUpdateResponse = {
     updatedCells: number;
 };
 
+export type IUpdateCells = Array<{rowIndex: number, columnIndex: number, cell: ICell}>;
+
 /** @internal */
 export type IFormulaCells = Array<{row?: number | string, col?: number | string}>;
 /** @internal */
-export type IFormula = {formula: string, cells: IFormulaCells};
+export type IFormula = {formula: string, cells?: IFormulaCells};
 /** @internal */
 export type ICell = number | string | IFormula;
 /** @internal */

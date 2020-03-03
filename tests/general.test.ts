@@ -207,11 +207,12 @@ describe.only("general", () => {
 
         const values = [
             ["value1", "value2/string", "value3/number", "value4/boolean", "value5/date", "value6/number[]", "value7/string[]", "value7/ignore"],
-            ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+            ["1", "2", "3", "4", "5", "6", "7", {formula: "=sum(1:1)"}, "9"],
             [1, 2, 3, 4, 5, 6, 7, 8, 9],
             ["", "b", "c", "d", "e", "", "", "h", "i"],
         ];
         await sheet.update(values, {clearAllValues: true, margin: 2});
+        const getValues = await sheet.getValues();
 
         type IObject = {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[]};
         const objectSheet = await sheet.exportAsObjectSheet<IObject>();

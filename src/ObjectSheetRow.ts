@@ -1,9 +1,9 @@
 import {Sheet} from "./Sheet";
-import {INormalizedRow, INormalizedValues} from "./types";
+import {INormalizedRow, INormalizedValues, IUpdateCells} from "./types";
 
 const sheetSymbol = Symbol("sheet");
 
-export class ObjectSheetRow<T extends object> {
+export class ObjectSheetRow<T extends object = object> {
   constructor(sheet: Sheet,
               public readonly index: number,
               public readonly headerTypes: Array<{ name: string, type: string }>,
@@ -40,18 +40,16 @@ export class ObjectSheetRow<T extends object> {
     const sheet = this._getSheet();
     const values: INormalizedRow = [];
 
+    const cells: IUpdateCells = [];
     for (let i = 0; i < this.headerTypes.length; i++ ) {
       const {name, type} = this.headerTypes[i];
-      const normalizedValue = this._normalizeValue(type, (this as any)[name]);
-
-      if (type === "ignore") {
-        values.push(this.rawRowValues[i]);
-      } else {
-        values.push(normalizedValue);
+      if (type !== "ignore") {
+        const normalizedValue = this._normalizeValue(type, (this as any)[name]);
+        cells.push({rowIndex: this.index + 1, columnIndex: i, cell: normalizedValue});
       }
     }
 
-    await sheet.updateRow(this.index + 1, values, {valueInputOption: "RAW"});
+    await sheet.updateCells(cells, {valueInputOption: "RAW"});
   }
 
   private _getSheet(): Sheet {

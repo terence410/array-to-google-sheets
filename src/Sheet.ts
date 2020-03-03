@@ -7,7 +7,7 @@ import {
     IFormulaCells, INormalizedCell,
     INormalizedRow,
     INormalizedValues,
-    IRow, IUpdateBaseOptions,
+    IRow, IUpdateBaseOptions, IUpdateCells,
     IUpdateOptions,
     IUpdateResponse,
     IValues,
@@ -233,6 +233,29 @@ export class Sheet {
         return this._addUpdateResponse(updateResponse, res.data as IUpdateResponse);
     }
 
+    public async updateCells(cells: IUpdateCells, options: IUpdateBaseOptions = {}): Promise<IUpdateResponse> {
+        const client = this._getClient();
+        const url = `/${this.spreadsheetId}/values:batchUpdate`;
+        const params = {};
+        const body = {
+            data: cells.map(x => {
+                return {values: [[this._normalizeCell(x.rowIndex, x.columnIndex, x.cell)]], range: this._getRange(1, 1, x.columnIndex, x.rowIndex)};
+            }),
+            valueInputOption: options.valueInputOption || "USER_ENTERED",
+        };
+        
+        const res = await client.request({
+            baseURL: GOOGLE_SPREADSHEETS_URL,
+            url,
+            params,
+            data: body,
+            method: "POST",
+        });
+
+        const updateResponse: IUpdateResponse = {updatedCells: 0, updatedColumns: 0, updatedRows: 0};
+        return this._addUpdateResponse(updateResponse, res.data as IUpdateResponse);
+    }
+
     // region private methods
 
     private _getClient(): JWT {
@@ -288,7 +311,7 @@ export class Sheet {
         return cell;
     }
 
-    private _formatFormula(formulaFormat: string, formulaCells: IFormulaCells, currentRow: number, currentCol: number) {
+    private _formatFormula(formulaFormat: string, formulaCells: IFormulaCells | undefined, currentRow: number, currentCol: number) {
         if (!Array.isArray(formulaCells)) {
             return formulaFormat;
         }
