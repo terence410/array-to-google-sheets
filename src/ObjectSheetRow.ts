@@ -5,9 +5,9 @@ const sheetSymbol = Symbol("sheet");
 
 export class ObjectSheetRow<T extends object> {
   constructor(sheet: Sheet,
-              public index: number,
-              public headerTypes: Array<{ name: string, type: string }>,
-              public rawRowValues: INormalizedRow,
+              public readonly index: number,
+              public readonly headerTypes: Array<{ name: string, type: string }>,
+              public readonly rawRowValues: INormalizedRow,
   ) {
 
     // add values into object

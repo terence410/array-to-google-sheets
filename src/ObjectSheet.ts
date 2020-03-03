@@ -5,8 +5,8 @@ import {INormalizedValues, IValues} from "./types";
 const sheetSymbol = Symbol("sheet");
 
 export class ObjectSheet<T extends object = object> {
-  public rawHeaders: string[];
-  public headerTypes: Array<{name: string, type: string}> = [];
+  public readonly rawHeaders: string[];
+  public readonly headerTypes: Array<{name: string, type: string}> = [];
   private _objects: any[] = [];
 
   constructor(sheet: Sheet, public rawValues: INormalizedValues) {
