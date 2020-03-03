@@ -201,12 +201,12 @@ describe.only("general", () => {
         assert.equal(finalValues[total][total], Math.pow(total - 1, 2));
     });
 
-    it("export as SheetObject", async () => {
+    it.only("export as SheetObject", async () => {
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 
         const values = [
-            ["value1", "value2/string", "value3/number", "value4/boolean", "value5/date", "value6/number[]", "value7/string[]", "value8/ignore"],
+            ["value1", "value2/string", "value3/number", "value4/boolean", "value5/date", "value6/number[]", "value7/string[]", "value7/ignore"],
             ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
             [1, 2, 3, 4, 5, 6, 7, 8, 9],
             ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
