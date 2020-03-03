@@ -74,7 +74,7 @@ export class ObjectSheet<T extends any> {
         const name = matches[1];
         const type = (matches[3] === "date" ? "Date" : matches[3]) || "string";
 
-        if (this.headers.find(x => x.name === name) && name !== "ignore") {
+        if (this.headers.find(x => x.name === name) && type !== "ignore") {
           throw new Error(`Object Sheet Error. Header with the name "${name}" already exist`);
         }
         this.headers.push({name, type});

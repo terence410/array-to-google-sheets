@@ -15,7 +15,6 @@ export function generateRandomString(length: number = 16) {
 function getMemory() {
     const {heapUsed, heapTotal} = process.memoryUsage();
     return {heapUsed, heapTotal};
-    // console.log(`heap: ${heapUsed / 1024 / 1024 | 0}MB, healTotal: ${heapTotal / 1024 / 1024 | 0}MB`);
 }
 
 const spreadsheetId = process.env.SPREADSHEET_ID || "";
@@ -201,7 +200,7 @@ describe.only("general", () => {
         assert.equal(finalValues[total][total], Math.pow(total - 1, 2));
     });
 
-    it.only("export as SheetObject", async () => {
+    it("export as SheetObject", async () => {
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 

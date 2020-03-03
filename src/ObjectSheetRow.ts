@@ -85,12 +85,19 @@ export class ObjectSheetRow<T extends any> {
 
   private _normalizeValue(type: string, value: any) {
     switch (type) {
-      case "string":
       case "number":
+        return Number.isNaN(value) ? "NaN" : value;
+
+      case "string":
       case "boolean":
         return value;
+
       case "Date":
-        return (value as Date).toISOString();
+        try {
+          return (value as Date).toISOString();
+        } catch (err) {
+          return "Invalid Date";
+        }
 
       case "number[]":
       case "string[]":

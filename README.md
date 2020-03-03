@@ -101,41 +101,6 @@ async function updateRowsAndCells() {
     }
 }
 
-async function experimentalObjectSheet() {
-    const spreadsheetId = "";
-    const keyFilename = "serviceAccount.json";
-    const googleSheets = new ArrayToGoogleSheets({keyFilename});
-    const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
-    const sheet = await spreadsheet.findOrCreateSheet("sheetName");
-
-    const values = [
-        ["value1", "value2/string", "value3/number", "value4/boolean", "value5/date", "value6/number[]", "value7/string[]", "value8/ignore"],
-        ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-        [1, 2, 3, 4, 5, 6, 7, 8, 9],
-        ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
-    ];
-    await sheet.update(values, {clearAllValues: true, margin: 2});
-
-    type IObject = {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[]};
-    const objectSheet = await sheet.exportAsObjectSheet<IObject>();
-    const type = objectSheet.getType();
-
-    // this can print the type IObject
-    console.log("typescript", type);
-
-    // get data as object
-    for (let i = 0; i < objectSheet.length; i++) {
-        const item = objectSheet.get(i);
-        item.value1 = "key" + i;
-        item.value2 = "value" + i;
-        item.value3 = Math.random();
-        item.value4 = true;
-        item.value5 = new Date();
-        item.value6 = [i, 1, 2, Math.random()];
-        item.value7 = [i.toString(), "a", "b", "c"];
-        await item.save();
-    }
-}
 ```
 
 # spreadsheetId 
@@ -179,6 +144,80 @@ let values = [
     // =sum(B:B);
 ];
 ```
+
+# Experiment Object Sheet Feature
+```typescript
+async function experimentalObjectSheet() {
+    const spreadsheetId = "";
+    const keyFilename = "serviceAccount.json";
+    const googleSheets = new ArrayToGoogleSheets({keyFilename});
+    const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+    const sheet = await spreadsheet.findOrCreateSheet("sheetName");
+
+    const values = [
+        ["value1", "value2/string", "value3/number", "value4/boolean", "value5/date", "value6/number[]", "value7/string[]", "value8/ignore"],
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
+    ];
+    await sheet.update(values, {clearAllValues: true, margin: 2});
+
+    type IObject = {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[]};
+    const objectSheet = await sheet.exportAsObjectSheet<IObject>();
+    const type = objectSheet.getType();
+
+    // this can print the type IObject
+    console.log("typescript", type);
+
+    // get data as object
+    for (let i = 0; i < objectSheet.length; i++) {
+        const item = objectSheet.get(i);
+        item.value1 = "key" + i;
+        item.value2 = "value" + i;
+        item.value3 = Math.random();
+        item.value4 = true;
+        item.value5 = new Date();
+        item.value6 = [i, 1, 2, Math.random()];
+        item.value7 = [i.toString(), "a", "b", "c"];
+        await item.save();
+    }
+}
+```
+
+| value1 | value2/string | value3/number | value4/boolean | value5/date | value6/number[] | value7/string[] | value8/ignore |
+| ------ | ------------- | ------------- | -------------- | ----------- | --------------- | --------------- | ------------- |
+| key0 | value0 | 0.7238840059 | TRUE | 2020-03-03T05:41:02.926Z | 0, 1, 2, 0.865| 0, a, b, c | 8 |
+| key1 | value1 | 0.2963643265 | FALSE | 2020-03-03T05:41:03.149Z | 1, 1, 2, 0.995| 1, a, b, c | 8 |
+
+The above table will be converted as:
+```typescript
+type IObject = {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[]};
+const objectSheet = await sheet.exportAsObjectSheet<IObject>();
+const item = objectSheet.get(i);
+/* 
+[
+    {
+      value1: 'key0',
+      value2: 'value0',
+      value3: 0.7238840059,
+      value4: true,
+      value5: 2020-03-03T05:41:02.926Z
+      value6: [ 0, 1, 2, 0.865 ],
+      value7: [ '0', 'a', 'b', 'c' ]
+    }
+    {
+      value1: 'key1',
+      value2: 'value1',
+      value3: 0.2963643265,
+      value4: false,
+      value5: 2020-03-03T05:41:03.149Z
+      value6: [ 1, 1, 2, 0.995 ],
+      value7: [ '1', 'a', 'b', 'c' ]
+    }
+]
+*/
+```
+
 
 # Links
 - https://www.npmjs.com/package/array-to-google-sheets
