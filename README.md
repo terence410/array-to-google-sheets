@@ -86,10 +86,8 @@ async function advance() {
 
 async function updateRowsAndCells() {
     // expand the sheet size first if u have many rows
-    const spreadsheetId = "";
-    const keyFilename = "serviceAccount.json";
-    const googleSheets = new ArrayToGoogleSheets({keyFilename});
-    const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+    const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
+    const spreadsheet = await googleSheets.getSpreadsheet("spreadsheetId");
     const sheet = await spreadsheet.findOrCreateSheet("sheetName");
 
     // we have to make sure we have enough grids
@@ -106,7 +104,7 @@ async function updateRowsAndCells() {
 # spreadsheetId 
 
 Every Google Sheets has a unique key in the URL
-https://docs.google.com/spreadsheets/d/{docKey}/
+https://docs.google.com/spreadsheets/d/{spreadsheetId}/
 
 # KeyFilename / Service Account
 
@@ -148,10 +146,8 @@ let values = [
 # Experiment Object Sheet Feature
 ```typescript
 async function experimentalObjectSheet() {
-    const spreadsheetId = "";
-    const keyFilename = "serviceAccount.json";
-    const googleSheets = new ArrayToGoogleSheets({keyFilename});
-    const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+    const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
+    const spreadsheet = await googleSheets.getSpreadsheet("spreadsheetId");
     const sheet = await spreadsheet.findOrCreateSheet("sheetName");
 
     const values = [
@@ -196,24 +192,24 @@ const objectSheet = await sheet.exportAsObjectSheet<IObject>();
 const item = objectSheet.get(i);
 /* 
 [
-    {
-      value1: 'key0',
-      value2: 'value0',
-      value3: 0.7238840059,
-      value4: true,
-      value5: 2020-03-03T05:41:02.926Z
-      value6: [ 0, 1, 2, 0.865 ],
-      value7: [ '0', 'a', 'b', 'c' ]
-    }
-    {
-      value1: 'key1',
-      value2: 'value1',
-      value3: 0.2963643265,
-      value4: false,
-      value5: 2020-03-03T05:41:03.149Z
-      value6: [ 1, 1, 2, 0.995 ],
-      value7: [ '1', 'a', 'b', 'c' ]
-    }
+  {
+    value1: 'key0',
+    value2: 'value0',
+    value3: 0.7238840059,
+    value4: true,
+    value5: 2020-03-03T05:41:02.926Z
+    value6: [ 0, 1, 2, 0.865 ],
+    value7: [ '0', 'a', 'b', 'c' ]
+  }
+  {
+    value1: 'key1',
+    value2: 'value1',
+    value3: 0.2963643265,
+    value4: false,
+    value5: 2020-03-03T05:41:03.149Z
+    value6: [ 1, 1, 2, 0.995 ],
+    value7: [ '1', 'a', 'b', 'c' ]
+  }
 ]
 */
 ```
