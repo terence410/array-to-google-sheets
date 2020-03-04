@@ -79,23 +79,33 @@ async function experimentalObjectSheet() {
     ];
     await sheet.update(values, {clearAllValues: true, margin: 2});
 
-    type IObject = {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[]};
-    const objectSheet = await sheet.exportAsObjectSheet<IObject>();
-    const type = objectSheet.getType();
+    interface IObject {
+        value1: string;
+        value2: string;
+        value3: number;
+        value4: boolean;
+        value5: Date;
+        value6: number[];
+        value7: string[];
+    }
 
-    // this can print the type IObject
-    console.log("typescript", type);
+    const objectSheet = await sheet.exportAsObjectSheet<IObject>();
+    const objectInterface = objectSheet.getInterface();
+    const {headers, size, rawValues, rawHeaders} = objectSheet;
+
+    // this can print the interface IObject
+    console.log("typescript", objectInterface);
 
     // get data as object
-    for (let i = 0; i < objectSheet.length; i++) {
-        const item = objectSheet.get(i);
-        item.value1 = "key" + i;
-        item.value2 = "value" + i;
+    const firstItem = objectSheet.get(0);
+    for (const item of objectSheet) {
+        item.value1 = "key";
+        item.value2 = "value";
         item.value3 = Math.random();
         item.value4 = true;
         item.value5 = new Date();
-        item.value6 = [i, 1, 2, Math.random()];
-        item.value7 = [i.toString(), "a", "b", "c"];
+        item.value6 = [1, 2, Math.random()];
+        item.value7 = ["a", "b", "c"];
         await item.save();
     }
 }

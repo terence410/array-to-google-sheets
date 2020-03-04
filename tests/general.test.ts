@@ -214,31 +214,29 @@ describe.only("general", () => {
         await sheet.update(values, {clearAllValues: true, margin: 2});
         const getValues = await sheet.getValues();
 
-        type IObject = {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[]};
+        interface IObject {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[];}
         const objectSheet = await sheet.exportAsObjectSheet<IObject>();
-        const type = objectSheet.getType();
-        const headers = objectSheet.headers; // string[]
+        const objectInterface = objectSheet.getInterface();
 
-        console.log("typescript", type);
-        assert.equal(objectSheet.length, values.length - 1);
+        const {headers, size, rawValues, rawHeaders} = objectSheet;
+        assert.equal(size, values.length - 1);
 
-        for (let i = 0; i < objectSheet.length; i++) {
-            const item = objectSheet.get(i);
-            item.value1 = "key" + i;
-            item.value2 = "value" + i;
+        for (const item of objectSheet) {
+            item.value1 = "key";
+            // item.value2 = "value";
             item.value3 = Math.random();
-            item.value4 = true;
-            item.value5 = new Date();
-            item.value6 = [i, 1, 2, Math.random()];
-            item.value7 = [i.toString(), "a", "b", "c"];
+            // item.value4 = true;
+            // item.value5 = new Date();
+            item.value6 = [1, 2, Math.random()];
+            item.value7 = ["a", "b", "c"];
             await item.save();
         }
 
-        const objects = objectSheet.toObjects();
+        const objects = objectSheet.entries();
 
         // get the data back and validate
         const newObjectSheet = await sheet.exportAsObjectSheet();
-        for (let i = 0; i < objectSheet.length; i++) {
+        for (let i = 0; i < objectSheet.size; i++) {
             const item = newObjectSheet.get(i);
             assert.deepEqual(objects[i], item.toObject());
         }

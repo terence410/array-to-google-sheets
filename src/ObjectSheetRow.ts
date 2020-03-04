@@ -4,19 +4,32 @@ import {INormalizedRow, INormalizedValues, IUpdateCells} from "./types";
 const sheetSymbol = Symbol("sheet");
 
 export class ObjectSheetRow<T extends object = object> {
+  private _cachedValues: any = {};
+  private _changes: Set<string> = new Set();
+
   constructor(sheet: Sheet,
-              public readonly index: number,
-              public readonly headerTypes: Array<{ name: string, type: string }>,
-              public readonly rawRowValues: INormalizedRow,
+              private _rawRowValues: INormalizedRow,
+              private _index: number,
+              private _headerTypes: Array<{ name: string, type: string }>,
   ) {
 
     // add values into object
-    for (let i = 0; i < this.headerTypes.length; i++) {
-      const {name, type} = this.headerTypes[i];
-      const castedValue = this._castValue(type, rawRowValues[i]);
+    for (let i = 0; i < this._headerTypes.length; i++) {
+      const {name, type} = this._headerTypes[i];
+      const castedValue = this._castValue(type, _rawRowValues[i]);
 
       if (type !== "ignore") {
-        (this as any)[name] = castedValue;
+        this._cachedValues[name] = castedValue;
+
+        Object.defineProperty(this, name, {
+          get() {
+            return this._cachedValues[name];
+          },
+          set(value: any) {
+            this._changes.add(name);
+            this._cachedValues[name] = value;
+          },
+        });
       }
     }
 
@@ -24,13 +37,14 @@ export class ObjectSheetRow<T extends object = object> {
       enumerable: false,
       value: sheet,
     });
+
   }
 
   public toObject(): T {
     const object: any = {};
-    for (const header of this.headerTypes) {
+    for (const header of this._headerTypes) {
       if (header.type !== "ignore") {
-        object[header.name] = (this as any)[header.name];
+        object[header.name] = this._cachedValues[header.name];
       }
     }
     return object;
@@ -41,14 +55,15 @@ export class ObjectSheetRow<T extends object = object> {
     const values: INormalizedRow = [];
 
     const cells: IUpdateCells = [];
-    for (let i = 0; i < this.headerTypes.length; i++ ) {
-      const {name, type} = this.headerTypes[i];
-      if (type !== "ignore") {
-        const normalizedValue = this._normalizeValue(type, (this as any)[name]);
-        cells.push({rowIndex: this.index + 1, columnIndex: i, cell: normalizedValue});
+    for (let i = 0; i < this._headerTypes.length; i++) {
+      const {name, type} = this._headerTypes[i];
+      if (this._changes.has(name)) {
+        const normalizedValue = this._normalizeValue(type, this._cachedValues[name]);
+        cells.push({rowIndex: this._index + 1, columnIndex: i, cell: normalizedValue});
       }
     }
 
+    this._changes.clear();
     await sheet.updateCells(cells, {valueInputOption: "RAW"});
   }
 

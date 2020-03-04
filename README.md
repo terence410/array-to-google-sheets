@@ -187,9 +187,19 @@ async function experimentalObjectSheet() {
 
 The above table will be converted as:
 ```typescript
-type IObject = {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[]};
+
+interface IObject {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[];}
 const objectSheet = await sheet.exportAsObjectSheet<IObject>();
-const item = objectSheet.get(i);
+const objectInterface = objectSheet.getInterface();
+const {headers, size, rawValues, rawHeaders} = objectSheet;
+const firstItem = objectSheet.get(0);
+
+for (const item of objectSheet) {
+    console.log(item.toObject());
+    item.value1 = "new Value";
+    // this will only update the changed cell values to minimize modifing the original values as much as possible
+    await item.save();
+}
 /* 
 [
   {
