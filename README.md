@@ -188,17 +188,29 @@ async function experimentalObjectSheet() {
 The above table will be converted as:
 ```typescript
 
-interface IObject {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[];}
-const objectSheet = await sheet.exportAsObjectSheet<IObject>();
-const objectInterface = objectSheet.getInterface();
-const {headers, size, rawValues, rawHeaders} = objectSheet;
-const firstItem = objectSheet.get(0);
+async function sheetObject() {
+    interface IObject {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[];}
+    const objectSheet = await sheet.exportAsObjectSheet<IObject>();
+    // generate the above IObject 
+    const objectInterface = objectSheet.getInterface();
+    const {headers, size, rawValues, rawHeaders} = objectSheet;
+    const firstItem = objectSheet.get(0);
 
-for (const item of objectSheet) {
-    console.log(item.toObject());
-    item.value1 = "new Value";
-    // this will only update the changed cell values to minimize modifing the original values as much as possible
-    await item.save();
+    // iterator
+    for (const item of objectSheet) {
+        console.log(item.toObject());
+        item.value1 = "new Value";
+        // this will only update the changed cell values to minimize modifing the original values as much as possible
+        await item.save();
+    }
+
+   const findItem = objectSheet.toArray().find(x => x.value1 === "key");
+    const objects = objectSheet.toObjects();
+    
+    // add new item
+    const newItem = await objectSheet.append({} as any);
+    // you have to manage the sheet size yourself in case of error
+    await sheet.resize(100, 100);
 }
 /* 
 [

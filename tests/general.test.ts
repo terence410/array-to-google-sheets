@@ -36,7 +36,6 @@ describe.only("general", () => {
         }
     });
 
-
     it("basic operation", async () => {
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const {spreadsheetUrl, properties} = spreadsheet;
@@ -206,15 +205,24 @@ describe.only("general", () => {
         const sheet = await spreadsheet.findOrCreateSheet(sheetName);
 
         const values = [
-            ["value1", "value2/string", "value3/number", "value4/boolean", "value5/date", "value6/number[]", "value7/string[]", "value7/ignore"],
-            ["1", "2", "3", "4", "5", "6", "7", {formula: "=sum(1:1)"}, "9"],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            ["", "b", "c", "d", "e", "", "", "h", "i"],
+            ["value1", "skip/ignore", "value2/string", "value3/number", "value4/boolean", "value5/date", "value6/number[]", "value7/string[]", "value7/ignore"],
+            ["1", "0", "2", "3", "4", "5", "6", "7", {formula: "=sum(1:1)"}, "9"],
+            [1, 0, 2, 3, 4, 5, 6, 7, 8, 9],
+            ["", "0", "b", "c", "d", "e", "", "", "h", "i"],
         ];
         await sheet.update(values, {clearAllValues: true, margin: 2});
         const getValues = await sheet.getValues();
 
-        interface IObject {value1: string; value2: string; value3: number; value4: boolean; value5: Date; value6: number[]; value7: string[];}
+        interface IObject {
+            value1: string;
+            value2: string;
+            value3: number;
+            value4: boolean;
+            value5: Date;
+            value6: number[];
+            value7: string[];
+        }
+
         const objectSheet = await sheet.exportAsObjectSheet<IObject>();
         const objectInterface = objectSheet.getInterface();
 
@@ -232,13 +240,45 @@ describe.only("general", () => {
             await item.save();
         }
 
-        const objects = objectSheet.entries();
-
         // get the data back and validate
-        const newObjectSheet = await sheet.exportAsObjectSheet();
+        const objects = objectSheet.toObjects();
+        const newObjectSheet = await sheet.exportAsObjectSheet<IObject>();
         for (let i = 0; i < objectSheet.size; i++) {
             const item = newObjectSheet.get(i);
             assert.deepEqual(objects[i], item.toObject());
+        }
+
+        // interact with toArray
+        const results = objectSheet.toArray().filter(x => x.value1 === "key");
+        assert.equal(results.length, objectSheet.size);
+
+        // append new value
+        const newObject = {
+            value1: "newKey",
+            value2: "value",
+            value3: 1,
+            value4: true,
+            value5: new Date(),
+            value6: [1, 2, 3],
+            value7: ["a", "b", "c"],
+        };
+        const newItem = await objectSheet.append(newObject);
+        assert.deepEqual(newObject, newItem.toObject());
+
+        // the new item can be further updated
+        const findNewItem = objectSheet.get(objectSheet.size - 1);
+        findNewItem.value3 = 1000;
+        await findNewItem.save();
+
+        // we resize the sheet
+        await sheet.resize(5, 20);
+
+        // we try to add one more item
+        try {
+            await objectSheet.append(newObject);
+            assert.isTrue(false);
+        } catch (err) {
+            assert.match(err.message, /Invalid/);
         }
     });
 

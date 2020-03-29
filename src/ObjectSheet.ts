@@ -59,14 +59,18 @@ export class ObjectSheet<T extends object = object> {
     return `interface IObject {${types.join(" ")}}`;
   }
 
-  public entries(): T[] {
-    const objects: any[] = [];
+  public toArray(): Array<T & ObjectSheetRow> {
+    const results: any[] = [];
     for (let i = 1; i < this.rawValues.length; i++) {
       const objectSheetRow = this.get(i - 1);
-      objects.push(objectSheetRow.toObject());
+      results.push(objectSheetRow);
     }
 
-    return objects;
+    return results;
+  }
+
+  public toObjects(): T[] {
+    return this.toArray().map(x => x.toObject()) as T[];
   }
 
   public get(index: number): T & ObjectSheetRow<T>  {
@@ -81,6 +85,22 @@ export class ObjectSheet<T extends object = object> {
     
     return undefined as any;
   }
+
+  public async append(values: T): Promise<T & ObjectSheetRow<T>> {
+    const index = this.rawValues.length - 1;
+    const rawRowValues: any[] = [];
+    const result = new ObjectSheetRow<T>(this._getSheet(), rawRowValues, index, this._headerTypes);
+    Object.assign(result, values);
+
+    // update data before save
+    this.rawValues.push(rawRowValues);
+    this._cachedObjects[index]  = result;
+
+    await result.save();
+    return result as T & ObjectSheetRow<T>;
+  }
+
+  // region private methods
 
   private _validateValues() {
     if (this.rawValues.length <= 1) {
@@ -119,5 +139,7 @@ export class ObjectSheet<T extends object = object> {
   private _getSheet(): Sheet {
     return (this as any)[sheetSymbol] as Sheet;
   }
+
+  // endregion
 
 }

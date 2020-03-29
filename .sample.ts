@@ -108,4 +108,12 @@ async function experimentalObjectSheet() {
         item.value7 = ["a", "b", "c"];
         await item.save();
     }
+
+    const findItem = objectSheet.toArray().find(x => x.value1 === "key");
+    const objects = objectSheet.toObjects();
+
+    // add new item
+    const newItem = await objectSheet.append({} as any);
+    // you have to manage the sheet size yourself
+    await sheet.resize(100, 100);
 }
