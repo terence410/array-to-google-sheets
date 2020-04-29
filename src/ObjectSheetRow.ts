@@ -82,7 +82,7 @@ export class ObjectSheetRow<T extends object = object> {
       case "boolean":
         return Boolean(value);
 
-      case "Date":
+      case "date":
         return new Date(value);
 
       case "number[]":
@@ -105,9 +105,9 @@ export class ObjectSheetRow<T extends object = object> {
       case "boolean":
         return value;
 
-      case "Date":
+      case "date":
         try {
-          return (value as Date).toISOString();
+          return new Date(value).toISOString();
         } catch (err) {
           return "Invalid Date";
         }

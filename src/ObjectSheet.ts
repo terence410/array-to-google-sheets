@@ -103,8 +103,8 @@ export class ObjectSheet<T extends object = object> {
   // region private methods
 
   private _validateValues() {
-    if (this.rawValues.length <= 1) {
-      throw new Error("ObjectSheet Error. Please make sure the sheet has two rows or above.");
+    if (this.rawValues.length < 1) {
+      throw new Error("ObjectSheet Error. Please make sure the sheet has defined an header row.");
     }
 
     // validate and update header map
@@ -114,7 +114,7 @@ export class ObjectSheet<T extends object = object> {
       const matches = rawHeader.match(headerRegex);
       if (matches) {
         const name = matches[1];
-        const type = (matches[3] === "date" ? "Date" : matches[3]) || "string";
+        const type = matches[3] || "string";
 
         // check for errors
         if (this._headerTypes.find(x => x.name === name) && type !== "ignore") {

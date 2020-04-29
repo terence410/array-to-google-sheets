@@ -234,7 +234,7 @@ describe.only("general", () => {
             // item.value2 = "value";
             item.value3 = Math.random();
             // item.value4 = true;
-            // item.value5 = new Date();
+            item.value5 = new Date(1000 * 1000);
             item.value6 = [1, 2, Math.random()];
             item.value7 = ["a", "b", "c"];
             await item.save();
