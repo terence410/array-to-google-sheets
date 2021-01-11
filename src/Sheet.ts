@@ -109,7 +109,7 @@ export class Sheet {
                 {
                     updateSheetProperties: {
                         fields: "*",
-                        properties: {sheetId: this.sheetId, title: this.title, gridProperties: this.gridProperties},
+                        properties: {index: this.index, sheetId: this.sheetId, title: this.title, gridProperties: this.gridProperties},
                     },
                 },
             ],

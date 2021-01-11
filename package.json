@@ -19,7 +19,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "google-auth-library": "^6.0.5"
+    "google-auth-library": "^6.1.4"
   },
   "devDependencies": {
     "@types/chai": "^4.2.3",

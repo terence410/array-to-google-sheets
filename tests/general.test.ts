@@ -27,7 +27,7 @@ const sheetName = generateRandomString();
 const emptySheetName = generateRandomString();
 const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
 
-describe.only("general", () => {
+describe("general", () => {
     afterEach(async () => {
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
         const sheet = await spreadsheet.findSheet(sheetName);
