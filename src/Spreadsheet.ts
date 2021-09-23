@@ -1,4 +1,4 @@
-import {JWT} from "google-auth-library";
+import {AuthClient} from "google-auth-library/build/src/auth/authclient";
 import {Sheet} from "./Sheet";
 import {GOOGLE_SPREADSHEETS_URL, ISpreadsheetProperties, IUpdateOptions, IValues} from "./types";
 
@@ -8,13 +8,13 @@ export class Spreadsheet {
     public properties!: ISpreadsheetProperties;
     public sheets!: Sheet[];
 
-    constructor(spreadsheetId: string, jwt: JWT) {
+    constructor(spreadsheetId: string, client: AuthClient) {
         this.spreadsheetId = spreadsheetId;
 
         // hide the property from console.log
-        Object.defineProperty(this, "jwt", {
+        Object.defineProperty(this, "client", {
             enumerable: false,
-            value: jwt,
+            value: client,
         });
     }
 
@@ -65,8 +65,8 @@ export class Spreadsheet {
         return await sheet.update(values, options);
     }
 
-    private _getClient(): JWT {
-        return (this as any).jwt as JWT;
+    private _getClient(): AuthClient {
+        return (this as any).client as any;
     }
 
     private _syncProperties(data: any) {

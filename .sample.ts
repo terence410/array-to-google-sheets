@@ -2,20 +2,24 @@ import {ArrayToGoogleSheets, IUpdateOptions} from "./src/";
 
 async function simple() {
     const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
-    const spreadsheet = await googleSheets.getSpreadsheet("19Ef3falKKiHAOo3Ps13tVC9M0BaG-NoYngAZggt8Jzk-NodnEAz5gt3iak");
+    // https://docs.google.com/spreadsheets/d/[ID]
+    const spreadsheet = await googleSheets.getSpreadsheet("ID");
     await spreadsheet.updateSheet("sheetName", [[1, 2, 3]]);
 }
 
-async function advance() {
+async function auth() {
     // https://www.npmjs.com/package/google-auth-library
+    const googleSheets1 = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
+    const googleSheets2 = new ArrayToGoogleSheets({credentials: {client_email: "", private_key: ""}});
 
-    // service account json (either one)
-    const keyFilename = "serviceAccount.json";
-    // credentials for service account (either one)
-    const credentials = {client_email: "", private_key: ""};
+    // oauth
+    const googleSheets3 = new ArrayToGoogleSheets({oAuthCredentials: {access_token: ""}});
+    const googleSheets4 = new ArrayToGoogleSheets({oAuthCredentials: {refresh_token: ""}, oauthClientOptions: {clientId: "", clientSecret: ""}});
+}
 
+async function advance() {
     const spreadsheetId = "";
-    const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
+    const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
     const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
     const {spreadsheetUrl, properties} = spreadsheet;
     const {title, locale, timeZone, defaultFormat} = properties;

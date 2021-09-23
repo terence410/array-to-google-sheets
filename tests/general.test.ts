@@ -5,7 +5,6 @@ import crypto from "crypto";
 import csvParse from "csv-parse";
 import "mocha";
 import {ArrayToGoogleSheets} from "../src/ArrayToGoogleSheets";
-import {ObjectSheet} from "../src/ObjectSheet";
 import {IRow} from "../src/types";
 
 export function generateRandomString(length: number = 16) {
@@ -34,6 +33,11 @@ describe("general", () => {
         if (sheet) {
             await sheet.delete();
         }
+    });
+
+    it("open spreadsheet", async () => {
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+        assert.isArray(spreadsheet.sheets);
     });
 
     it("basic operation", async () => {

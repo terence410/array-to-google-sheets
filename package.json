@@ -19,7 +19,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "google-auth-library": "^6.1.4"
+    "google-auth-library": "^7.9.2"
   },
   "devDependencies": {
     "@types/chai": "^4.2.3",
@@ -31,7 +31,8 @@
     "ts-node": "^8.5.0",
     "typescript": "^3.7.2",
     "csv-parse": "^4.8.5",
-    "nyc": "^15.0.0"
+    "nyc": "^15.0.0",
+    "open": "^8.2.1"
   },
   "keywords": [
     "array",

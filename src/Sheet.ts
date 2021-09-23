@@ -1,5 +1,5 @@
 import fs from "fs";
-import {JWT} from "google-auth-library";
+import {AuthClient} from "google-auth-library/build/src/auth/authclient";
 import {ObjectSheet} from "./ObjectSheet";
 import {
     GOOGLE_SPREADSHEETS_URL,
@@ -25,14 +25,14 @@ export class Sheet {
         columnCount: number;
     };
 
-    constructor(jwt: JWT, spreadsheetId: string, properties: object) {
+    constructor(client: AuthClient, spreadsheetId: string, properties: object) {
         this.spreadsheetId = spreadsheetId;
         Object.assign(this, properties);
 
         // hide the property from console.log
-        Object.defineProperty(this, "jwt", {
+        Object.defineProperty(this, "client", {
             enumerable: false,
-            value: jwt,
+            value: client,
         });
     }
 
@@ -164,7 +164,7 @@ export class Sheet {
         const params = {
             valueInputOption: "USER_ENTERED",
         };
-        
+
         const updateResponse: IUpdateResponse = {updatedCells: 0, updatedColumns: 0, updatedRows: 0};
         for (let i = 0; i < Math.ceil(totalRows / batch); i++) {
             const offsetY = i * batch;
@@ -243,7 +243,7 @@ export class Sheet {
             }),
             valueInputOption: options.valueInputOption || "USER_ENTERED",
         };
-        
+
         const res = await client.request({
             baseURL: GOOGLE_SPREADSHEETS_URL,
             url,
@@ -258,8 +258,8 @@ export class Sheet {
 
     // region private methods
 
-    private _getClient(): JWT {
-        return (this as any).jwt as JWT;
+    private _getClient(): AuthClient {
+        return (this as any).client as AuthClient;
     }
 
     private _convertColToAlphabet(num: number): string {

@@ -9,6 +9,7 @@ package-lock.json
 credential.json
 build
 index.csv
+testing.ts
 
 # User-specific stuff
 .idea/**/workspace.xml

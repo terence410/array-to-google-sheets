@@ -34,70 +34,75 @@ The library is build with [Google Sheets API v4](https://developers.google.com/s
 import {ArrayToGoogleSheets, IUpdateOptions} from "array-to-google-sheets"; // typescript
 
 async function simple() {
-    const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
-    const spreadsheet = await googleSheets.getSpreadsheet("19Ef3falKKiHAOo3Ps13tVC9M0BaG-NoYngAZggt8Jzk-NodnEAz5gt3iak");
-    await spreadsheet.updateSheet("sheetName", [[1, 2, 3]]);
+  const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
+  // https://docs.google.com/spreadsheets/d/[ID]
+  const spreadsheet = await googleSheets.getSpreadsheet("ID");
+  await spreadsheet.updateSheet("sheetName", [[1, 2, 3]]);
+}
+
+async function auth() {
+  // https://www.npmjs.com/package/google-auth-library
+  const googleSheets1 = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
+  const googleSheets2 = new ArrayToGoogleSheets({credentials: {client_email: "", private_key: ""}});
+
+  // oauth
+  const googleSheets3 = new ArrayToGoogleSheets({oAuthCredentials: {access_token: ""}});
+  const googleSheets4 = new ArrayToGoogleSheets({oAuthCredentials: {refresh_token: ""}, oauthClientOptions: {clientId: "", clientSecret: ""}});
 }
 
 async function advance() {
-    // https://www.npmjs.com/package/google-auth-library
+  const spreadsheetId = "";
+  const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
+  const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+  const {spreadsheetUrl, properties} = spreadsheet;
+  const {title, locale, timeZone, defaultFormat} = properties;
 
-    // service account json (either one)
-    const keyFilename = "serviceAccount.json";
-    // credentials for service account (either one)
-    const credentials = {client_email: "", private_key: ""};
+  // find and delete
+  const sheetName = "sheetName";
+  const sheet = await spreadsheet.findSheet(sheetName);
+  if (sheet) {
+    const result = await sheet.delete();
+  }
 
-    const spreadsheetId = "";
-    const googleSheets = new ArrayToGoogleSheets({keyFilename, credentials});
-    const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
-    const {spreadsheetUrl, properties} = spreadsheet;
-    const {title, locale, timeZone, defaultFormat} = properties;
+  // get sheet again
+  const newSheet = await spreadsheet.findOrCreateSheet(sheetName);
+  const url = newSheet.getUrl();
 
-    // find and delete
-    const sheetName = "sheetName";
-    const sheet = await spreadsheet.findSheet(sheetName);
-    if (sheet) {
-        const result = await sheet.delete();
-    }
+  //  update
+  const values1 = [
+    [1, 2, 3],
+    [1.1, 2.2, -3.33],
+    ["abc", "cde", "xyz"],
+  ];
+  const updateOptions: IUpdateOptions = {
+    minRow: 3, // styling
+    minColumn: 3, // styling
+    margin: 2,  // styling
+    fitToSize: true,  // remove empty cells
+    clearAllValues: true, // clear all existing values
+  };
+  const updateResult1 = await newSheet.update(values1, updateOptions);
+  const resultValues1 = await newSheet.getValues();
 
-    // get sheet again
-    const newSheet = await spreadsheet.findOrCreateSheet(sheetName);
-    const url = newSheet.getUrl();
-
-    //  update
-    const values1 = [
-        [1, 2, 3],
-        [1.1, 2.2, -3.33],
-        ["abc", "cde", "xyz"],
-    ];
-    const updateOptions: IUpdateOptions = {
-        minRow: 3, // styling
-        minColumn: 3, // styling
-        margin: 2,  // styling
-        fitToSize: true,  // remove empty cells
-        clearAllValues: true, // clear all existing values
-    };
-    const updateResult1 = await newSheet.update(values1, updateOptions);
-    const resultValues1 = await newSheet.getValues();
-
-    // export into csv
-    await newSheet.exportAsCsv("data.csv");
+  // export into csv
+  await newSheet.exportAsCsv("data.csv");
 }
 
 async function updateRowsAndCells() {
-    // expand the sheet size first if u have many rows
-    const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
-    const spreadsheet = await googleSheets.getSpreadsheet("spreadsheetId");
-    const sheet = await spreadsheet.findOrCreateSheet("sheetName");
+  // expand the sheet size first if u have many rows
+  const googleSheets = new ArrayToGoogleSheets({keyFilename: "serviceAccount.json"});
+  const spreadsheet = await googleSheets.getSpreadsheet("spreadsheetId");
+  const sheet = await spreadsheet.findOrCreateSheet("sheetName");
 
-    // we have to make sure we have enough grids
-    await sheet.resize(10, 10);
+  // we have to make sure we have enough grids
+  await sheet.resize(10, 10);
 
-    for (let i = 0; i < 10; i++) {
-        await sheet.updateRow(i, [1, 2, 3]);
-        await sheet.updateCell(i, i, 1);
-    }
+  for (let i = 0; i < 10; i++) {
+    await sheet.updateRow(i, [1, 2, 3]);
+    await sheet.updateCell(i, i, 1);
+  }
 }
+
 
 ```
 
