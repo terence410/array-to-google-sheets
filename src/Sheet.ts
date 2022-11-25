@@ -60,7 +60,7 @@ export class Sheet {
         // if we wanted to save as file
         if (filename) {
             await new Promise((resolve, reject) =>
-                fs.writeFile(filename, csv, (err) => err ? reject(err) : resolve()));
+                fs.writeFile(filename, csv, (err) => err ? reject(err) : resolve(0)));
         }
 
         return csv;

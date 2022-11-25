@@ -2,7 +2,7 @@ import { assert, expect } from "chai";
 import {config} from "dotenv";
 config();
 import crypto from "crypto";
-import csvParse from "csv-parse";
+import {parse} from "csv-parse";
 import "mocha";
 import {ArrayToGoogleSheets} from "../src/ArrayToGoogleSheets";
 import {IRow} from "../src/types";
@@ -135,7 +135,7 @@ describe("general", () => {
         const csvString = await sheet.exportAsCsv("./index.csv");
 
         const resultValues = await new Promise((resolve, reject) => {
-            csvParse(csvString, {delimiter: ",", relax_column_count: true, cast: true}, (err, csvJson) => {
+            parse(csvString, {delimiter: ",", relax_column_count: true, cast: true}, (err, csvJson) => {
                 if (err) {
                     return resolve(err);
                 }
@@ -282,7 +282,9 @@ describe("general", () => {
             await objectSheet.append(newObject);
             assert.isTrue(false);
         } catch (err) {
-            assert.match(err.message, /Invalid/);
+            if (err instanceof Error) {
+                assert.match(err.message, /Invalid/);
+            }
         }
     });
 
