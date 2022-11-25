@@ -1,13 +1,10 @@
 # Array To Google Sheets #
 
 [![NPM version][npm-image]][npm-url]
-[![build status][travis-image]][travis-url]
 [![Test coverage][codecov-image]][codecov-url]
 
 [npm-image]: https://img.shields.io/npm/v/array-to-google-sheets.svg
 [npm-url]: https://npmjs.org/package/array-to-google-sheets
-[travis-image]: https://img.shields.io/travis/terence410/array-to-google-sheets.svg?style=flat-square
-[travis-url]: https://travis-ci.org/terence410/array-to-google-sheets
 [codecov-image]: https://img.shields.io/codecov/c/github/terence410/array-to-google-sheets.svg?style=flat-square
 [codecov-url]: https://codecov.io/gh/terence410/array-to-google-sheets
 
