@@ -3,7 +3,6 @@
 [![NPM version][npm-image]][npm-url]
 [![build status][travis-image]][travis-url]
 [![Test coverage][codecov-image]][codecov-url]
-[![David deps][david-image]][david-url]
 
 [npm-image]: https://img.shields.io/npm/v/array-to-google-sheets.svg
 [npm-url]: https://npmjs.org/package/array-to-google-sheets
@@ -11,8 +10,6 @@
 [travis-url]: https://travis-ci.org/terence410/array-to-google-sheets
 [codecov-image]: https://img.shields.io/codecov/c/github/terence410/array-to-google-sheets.svg?style=flat-square
 [codecov-url]: https://codecov.io/gh/terence410/array-to-google-sheets
-[david-image]: https://img.shields.io/david/terence410/array-to-google-sheets.svg?style=flat-square
-[david-url]: https://david-dm.org/terence410/array-to-google-sheets
 
 Update a 2 dimensional array into Google Sheets (Spreadsheets). You can also get back data in array or csv.
 The library is build with [Google Sheets API v4](https://developers.google.com/sheets).
