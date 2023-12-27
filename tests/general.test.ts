@@ -149,6 +149,27 @@ describe("general", () => {
         // clean up
         await sheet.delete();
     });
+    
+    it("updateColumn", async () => {
+        const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);
+        const sheet = await spreadsheet.findOrCreateSheet(sheetName);
+
+        // resize it first
+        await sheet.clear();
+        await sheet.resize(10, 10);
+
+        // add column
+        const total = 5;          
+        const values1: number[][] = []; // Initialize values1 as an empty array
+        for (let i = 0; i < total; i++) {
+            values1.push([i]);
+            await sheet.updateColumn(0, values1);
+        }
+
+        const finalValues = await sheet.getValues();
+        assert.equal(finalValues.length, total);
+        assert.deepEqual(finalValues, values1);
+    });
 
     it("updateRow", async () => {
         const spreadsheet = await googleSheets.getSpreadsheet(spreadsheetId);

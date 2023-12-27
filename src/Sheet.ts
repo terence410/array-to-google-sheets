@@ -191,6 +191,34 @@ export class Sheet {
         return updateResponse;
     }
 
+    public async updateColumn(columnIndex: number, values: IValues, updateOptions: Partial<IUpdateOptions> = {}): Promise<IUpdateResponse> {
+        const options = Object.assign({minRow: 0, minColumn: 0, margin: 2, fitToSize: false, clearAllValues: false}, updateOptions);
+
+        const client = this._getClient();
+        const params = {
+            valueInputOption: options.valueInputOption || "USER_ENTERED",
+        };
+
+        const updateResponse: IUpdateResponse = {updatedCells: 0, updatedColumns: 0, updatedRows: 0};
+        let body = { values: values };
+        const totalRows = values.length;
+        const range = this._getRange(1, totalRows, columnIndex, 0);
+        const url = `/${this.spreadsheetId}/values/${range}`;
+        const res = await client.request({
+            baseURL: GOOGLE_SPREADSHEETS_URL,
+            url,
+            params,
+            data: body,
+            method: "PUT",
+        });
+
+        const currentUpdateResponse = res.data as IUpdateResponse;
+        updateResponse.updatedRows += currentUpdateResponse.updatedRows;
+        updateResponse.updatedColumns = Math.max(updateResponse.updatedColumns, currentUpdateResponse.updatedColumns);
+        updateResponse.updatedCells += currentUpdateResponse.updatedCells;
+        return updateResponse;
+    }
+
     public async updateRow(rowIndex: number, row: IRow, options: IUpdateBaseOptions = {}): Promise<IUpdateResponse> {
         const client = this._getClient();
         const range = this._getRange(row.length, 1, 0, rowIndex);
