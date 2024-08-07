@@ -73,3 +73,15 @@ export type ISpreadsheetProperties = {
         }>,
     },
 };
+
+export type ISheetProperties = {
+    isDeleted?: boolean;
+    sheetId: number;
+    title: string;
+    index?: number;
+    sheetType: string;
+    gridProperties: {
+        rowCount: number,
+        columnCount: number,
+    },
+}

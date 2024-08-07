@@ -4,10 +4,14 @@ import {ObjectSheet} from "./ObjectSheet";
 import {
     GOOGLE_SPREADSHEETS_URL,
     ICell,
-    IFormulaCells, INormalizedCell,
+    IFormulaCells,
+    INormalizedCell,
     INormalizedRow,
     INormalizedValues,
-    IRow, IUpdateBaseOptions, IUpdateCells,
+    IRow,
+    ISheetProperties,
+    IUpdateBaseOptions,
+    IUpdateCells,
     IUpdateOptions,
     IUpdateResponse,
     IValues,
@@ -25,7 +29,7 @@ export class Sheet {
         columnCount: number;
     };
 
-    constructor(client: AuthClient, spreadsheetId: string, properties: object) {
+    constructor(client: AuthClient, spreadsheetId: string, properties: ISheetProperties) {
         this.spreadsheetId = spreadsheetId;
         Object.assign(this, properties);
 
@@ -274,6 +278,10 @@ export class Sheet {
 
         if (!height) {
             height = this.gridProperties.rowCount;
+        }
+
+        if (!width && !height) {
+            return this.title;
         }
 
         const rangeA = `${this._convertColToAlphabet(offsetX + 1)}${offsetY + 1}`;

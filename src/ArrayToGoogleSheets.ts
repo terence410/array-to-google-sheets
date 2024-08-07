@@ -22,6 +22,20 @@ export class ArrayToGoogleSheets {
         return spreadsheet;
     }
 
+    public static async getClient(options: GoogleAuthOptions | {
+        oAuthCredentials: Credentials,
+        oauthClientOptions?: OAuth2ClientOptions
+    }): Promise<AuthClient> {
+        if ("oAuthCredentials" in options) {
+            const oauth = new OAuth2Client(options.oauthClientOptions);
+            oauth.setCredentials(options.oAuthCredentials);
+            return oauth;
+        } else {
+            const googleAuth = new GoogleAuth({...options, scopes: [scope]});
+            return await googleAuth.getClient();
+        }
+    }
+
     // caching for client
     private async _getClient(): Promise<AuthClient> {
         if (!this._client) {
